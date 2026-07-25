@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const geoDistance = document.getElementById('geo-distance');
   const geoStatusBadge = document.getElementById('geo-status-badge');
   const geoCoords = document.getElementById('geo-coords');
-  const currentIpDisplay = document.getElementById('current-ip-display');
+  const currentIpDisplay = document.getElementById('client-ip') || document.getElementById('current-ip-display');
   const ipStatusBadge = document.getElementById('ip-status-badge');
-  const regIpText = document.getElementById('reg-ip-text');
-  const ipRegisterBanner = document.getElementById('ip-register-banner');
+  const regIpText = document.getElementById('registered-ip-val') || document.getElementById('reg-ip-text');
+  const ipRegisterBanner = document.getElementById('ip-registration-banner') || document.getElementById('ip-register-banner');
   const btnRegisterIp = document.getElementById('btn-register-ip');
 
   // Type Selector (DATANG / PULANG)
