@@ -18,13 +18,13 @@ type DateRow struct {
 
 func getFullStatusStr(item DateRow, logMap map[string]*models.AttendanceLog, username string) string {
 	if item.Date == "16-06-2026" || item.Date == "17-06-2026" {
-		return "Libur Galungan"
+		return "Libur Hari Raya Galungan"
 	}
 	if item.Date == "17-08-2026" {
-		return "Libur Kemerdekaan"
+		return "Libur Hari Kemerdekaan RI"
 	}
 	if item.Day == "Minggu" {
-		return "Libur Minggu"
+		return "Libur Hari Minggu"
 	}
 	if log, ok := logMap[item.Date]; ok {
 		if log.Type == "SAKIT" || log.Status == "SAKIT" {
@@ -95,7 +95,7 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	}
 
 	pdf := fpdf.New("P", "mm", "A4", "")
-	pdf.SetMargins(12, 6, 12)
+	pdf.SetMargins(12, 5, 12)
 	pdf.SetAutoPageBreak(false, 0)
 	pdf.AddPage()
 
@@ -109,7 +109,7 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	companyBytes, err := static.Files.ReadFile("logo_company.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_company", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(companyBytes))
-		pdf.ImageOptions("logo_company", 180, 6, 18, 12, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_company", 180, 5, 18, 12, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
 	// Header Title
@@ -142,19 +142,27 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 
 	pdf.Ln(2)
 
-	// 1 Single Continuous Table across all 78 Days
-	colW := []float64{12, 32, 32, 110}
+	// Balanced Column Widths (186 mm Total Width)
+	// No: 14mm | Tanggal: 40mm | Hari: 40mm | Status Presensi: 92mm
+	colW := []float64{14, 40, 40, 92}
 
-	pdf.SetFillColor(240, 240, 240)
-	pdf.SetFont("Times", "B", 8)
-	pdf.CellFormat(colW[0], 3.8, "No", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[1], 3.8, "Tanggal", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[2], 3.8, "Hari", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[3], 3.8, "Hadir / Tidak Hadir", "1", 1, "C", true, 0, "")
+	pdf.SetFillColor(230, 235, 245) // Soft professional blue-grey header
+	pdf.SetFont("Times", "B", 8.5)
+	pdf.CellFormat(colW[0], 4.0, "No", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[1], 4.0, "Tanggal", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[2], 4.0, "Hari", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[3], 4.0, "Status Presensi", "1", 1, "C", true, 0, "")
 
 	pdf.SetFont("Times", "", 7.5)
-	for _, item := range dateRange {
+	for i, item := range dateRange {
 		statusStr := getFullStatusStr(item, logMap, username)
+
+		// Subtle alternating row background color
+		fill := false
+		if i%2 == 1 {
+			pdf.SetFillColor(248, 249, 250)
+			fill = true
+		}
 
 		if statusStr != "Hadir" {
 			pdf.SetFont("Times", "B", 7.5)
@@ -162,10 +170,10 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 			pdf.SetFont("Times", "", 7.5)
 		}
 
-		pdf.CellFormat(colW[0], 2.85, item.No, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[1], 2.85, item.Date, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[2], 2.85, item.Day, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[3], 2.85, statusStr, "1", 1, "C", false, 0, "")
+		pdf.CellFormat(colW[0], 2.85, item.No, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[1], 2.85, item.Date, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[2], 2.85, item.Day, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[3], 2.85, statusStr, "1", 1, "C", fill, 0, "")
 	}
 
 	pdf.Ln(3)
