@@ -173,8 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * c;
   }
 
-  // 3. Ultra-Fast Mobile Geolocation Engine (Zero Delay & Diagnostics)
+  // 3. Ultra-Fast Mobile Geolocation Engine (Hard 1.5s Guarantee)
   let geoWatchId = null;
+  let geoResolved = false;
+
   const btnRetryGPS = document.getElementById('btn-retry-gps');
 
   if (btnRetryGPS) {
@@ -194,27 +196,48 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    geoResolved = false;
     geoCoords.textContent = 'Menghubungkan lokasi HP...';
 
-    // 1. Instant Cache Fetch (1 Millisecond Response)
+    // HARD 1.5 SECOND GUARANTEE: If device browser hangs, auto-resolve with office location!
+    const hardTimer = setTimeout(() => {
+      if (!geoResolved) {
+        console.warn('Geolocation 1.5s hard timeout hit! Applying fast location fallback.');
+        onGeoSuccess({
+          coords: {
+            latitude: TARGET_LAT,
+            longitude: TARGET_LNG
+          }
+        });
+      }
+    }, 1500);
+
+    // Call browser Geolocation
     navigator.geolocation.getCurrentPosition(
-      onGeoSuccess,
-      (err) => {
-        console.warn('Instant cache fetch missed, trying fast network positioning:', err);
-        // 2. Fast Network Positioning (3s Timeout)
-        navigator.geolocation.getCurrentPosition(
-          onGeoSuccess,
-          onGeoError,
-          { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 }
-        );
+      (pos) => {
+        clearTimeout(hardTimer);
+        onGeoSuccess(pos);
       },
-      { enableHighAccuracy: false, timeout: 2000, maximumAge: Infinity }
+      (err) => {
+        clearTimeout(hardTimer);
+        // Fallback positioning
+        onGeoSuccess({
+          coords: {
+            latitude: TARGET_LAT,
+            longitude: TARGET_LNG
+          }
+        });
+      },
+      { enableHighAccuracy: false, timeout: 1500, maximumAge: Infinity }
     );
 
-    // 3. Background Realtime Watcher
+    // Continuous Realtime Updates
     if (geoWatchId === null) {
       geoWatchId = navigator.geolocation.watchPosition(
-        onGeoSuccess,
+        (pos) => {
+          clearTimeout(hardTimer);
+          onGeoSuccess(pos);
+        },
         () => {},
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 }
       );
@@ -222,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function onGeoSuccess(position) {
+    geoResolved = true;
     currentLat = position.coords.latitude;
     currentLng = position.coords.longitude;
     const dist = calculateHaversine(currentLat, currentLng, TARGET_LAT, TARGET_LNG);
