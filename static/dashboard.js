@@ -82,16 +82,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // A. Alarm Absen Datang (08:00 WITA, Senin - Sabtu)
         if (currentHourWITA === 8 && minute === 0 && currentDayOfWeek !== 0) {
           sendPushNotification(
-            '⏰ Waktunya Absen Datang!',
-            'Selamat pagi! Jangan lupa kirim presensi DATANG Anda sebelum jam 08:30 WITA.'
+            '⏰ Jangan Lupa Absen Datang!',
+            'Selamat pagi! Jangan lupa absen datang hari ini sebelum jam 08:30 WITA agar presensi Anda tercatat tepat waktu.'
           );
         }
 
-        // B. Alarm Absen Pulang Normal (16:00 Mon-Fri, 13:00 Saturday)
+        // B. Warning Cutoff Absen Datang (08:15 WITA, Senin - Sabtu)
+        if (currentHourWITA === 8 && minute === 15 && currentDayOfWeek !== 0) {
+          sendPushNotification(
+            '⚠️ Pengingat Absen Datang (15 Menit Lagi)',
+            'Batas waktu jam 08:30 WITA tersisa 15 menit lagi. Segera kirim presensi datang Anda sekarang!'
+          );
+        }
+
+        // C. Alarm Absen Pulang Normal (16:00 Mon-Fri, 13:00 Saturday)
         if (currentHourWITA === normalPulangHour && minute === 0 && currentDayOfWeek !== 0) {
           sendPushNotification(
-            '🌙 Jam Kerja Selesai!',
-            `Selamat sore! Jam kerja hari ${currentDayOfWeek === 6 ? 'Sabtu' : 'ini'} telah berakhir. Silakan kirim presensi PULANG Anda.`
+            '🌙 Jangan Lupa Absen Pulang!',
+            `Selamat sore! Jam kerja hari ${currentDayOfWeek === 6 ? 'Sabtu' : 'ini'} telah berakhir. Jangan lupa absen pulang ya! Hati-hati di jalan.`
           );
         }
       }
