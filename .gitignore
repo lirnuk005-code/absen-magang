@@ -1,0 +1,9 @@
+# Go binary
+absen-server
+
+# Local cookie files
+cookies.txt
+cookies_deksa.txt
+
+# OS metadata
+.DS_Store

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absensi Mahasiswa Magang PT. Adya Artha Abadi Bali</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body class="page-center">
+  <div class="background-globes">
+    <div class="globe globe-1"></div>
+    <div class="globe globe-2"></div>
+  </div>
+
+  <div class="glass-card login-card">
+    <div class="logo-badge">
+      <i class="fa-solid fa-building-user"></i>
+    </div>
+    <h2>Absensi Mahasiswa Magang</h2>
+    <h3 style="font-size: 15px; color: #10b981; margin-top: 4px; margin-bottom: 6px; font-weight: 600;">PT. Adya Artha Abadi Bali</h3>
+    <p class="subtitle">Jl. Gatot Subroto I, Tonja, Denpasar Utara</p>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label><i class="fa-solid fa-user"></i> Username</label>
+        <select id="login-username" required>
+          <option value="" disabled selected>-- Pilih Akun --</option>
+          <option value="chris">chris</option>
+          <option value="deksa">deksa</option>
+          <option value="putra">putra</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-key"></i> Password</label>
+        <input type="password" id="login-password" placeholder="Masukkan password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">
+        <i class="fa-solid fa-right-to-bracket"></i> Masuk ke Dashboard
+      </button>
+    </form>
+
+    <div class="account-hint">
+      <span><i class="fa-solid fa-circle-info"></i> Akun Pengguna:</span>
+      <ul>
+        <li><b>chris</b> : 12310299</li>
+        <li><b>deksa</b> : 12310300</li>
+        <li><b>putra</b> : 12310311</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absensi Mahasiswa Magang PT. Adya Artha Abadi Bali</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css?v=8">
+</head>
+<body>
+  <div class="background-globes">
+    <div class="globe globe-1"></div>
+    <div class="globe globe-2"></div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand">
+        <i class="fa-solid fa-building-user text-accent"></i>
+        <div>
+          <h1>Absensi Mahasiswa Magang</h1>
+          <div class="company-sub">
+            <span class="company-name">PT. Adya Artha Abadi Bali</span>
+            <span class="dot-separator">•</span>
+            <span class="location-tag"><i class="fa-solid fa-location-dot"></i> Jln Gatot Subroto I, Denpasar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-chip">
+        <i class="fa-solid fa-user-gear"></i>
+        <span id="user-display-name">Loading...</span>
+      </div>
+      <button id="btn-logout" class="btn btn-icon" title="Keluar / Logout">
+        <i class="fa-solid fa-power-off"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard-body">
+    <!-- TIME & STATUS TOP CARDS -->
+    <div class="card-grid">
+      <!-- Live Clock Card -->
+      <div class="glass-card info-card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa-regular fa-clock"></i> Waktu Server (WITA)</span>
+          <span id="time-status-badge" class="badge badge-success">Jam Kerja</span>
+        </div>
+        <div class="time-display" id="live-clock">00:00:00</div>
+        <div class="card-footer" id="work-schedule-footer">
+          <i class="fa-solid fa-business-time"></i> <span id="schedule-text">Sen-Jum: 08:00-16:00 | Sab: 08:00-13:00 | Min: Libur</span>
+        </div>
+      </div>
+
+      <!-- Location Geofence Card -->
+      <div class="glass-card info-card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa-solid fa-compass"></i> Lokasi Anda (GPS)</span>
+          <span id="geo-status-badge" class="badge badge-warning">Memeriksa GPS...</span>
+        </div>
+        <div class="distance-display" id="geo-distance">-- m</div>
+        <div class="card-footer" id="geo-coords">
+          Area Kantor: Jln Gatot Subroto I, Denpasar
+        </div>
+      </div>
+
+      <!-- IP Anti-Tipsen Card -->
+      <div class="glass-card info-card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa-solid fa-network-wired"></i> Security IP (Anti-Tipsen)</span>
+          <span id="ip-status-badge" class="badge badge-danger">Belum Terdaftar</span>
+        </div>
+        <div class="ip-display" id="current-ip-display">--.--.--.--</div>
+        <div class="card-footer" id="ip-registered-footer">
+          Reg IP: <b id="reg-ip-text">Belum Terdaftar (Max 1 IP)</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN ACTION PANEL -->
+    <div class="glass-card action-card">
+      <div class="action-header">
+        <h3><i class="fa-solid fa-fingerprint"></i> Panel Eksekusi Presensi</h3>
+      </div>
+
+      <div class="action-body">
+        <div class="ip-registration-banner" id="ip-register-banner">
+          <div class="banner-content">
+            <i class="fa-solid fa-shield-cat banner-icon"></i>
+            <div>
+              <h4>Registrasi IP Perangkat (Wajib 1x)</h4>
+              <p>Setiap akun hanya diizinkan terikat pada <b>1 IP Address</b> untuk mencegah titip absen.</p>
+            </div>
+          </div>
+          <button id="btn-register-ip" class="btn btn-warning">
+            <i class="fa-solid fa-lock"></i> Daftarkan IP Perangkat Ini
+          </button>
+        </div>
+
+        <!-- TYPE PRESENSI SELECTOR (DATANG / PULANG / IZIN) -->
+        <div class="presensi-type-selector">
+          <button type="button" class="type-btn active" id="btn-type-datang" data-type="DATANG">
+            <i class="fa-solid fa-sun"></i> Absen Datang (08:00)
+          </button>
+          <button type="button" class="type-btn" id="btn-type-pulang" data-type="PULANG">
+            <i class="fa-solid fa-moon"></i> Absen Pulang (16:00)
+          </button>
+          <button type="button" class="type-btn" id="btn-type-izin" data-type="SAKIT">
+            <i class="fa-solid fa-hospital-user"></i> Absen Izin / Sakit
+          </button>
+        </div>
+
+        <!-- REASON INPUT FOR EARLY LEAVING -->
+        <div id="early-reason-container" class="reason-container hidden">
+          <label for="early-reason-input"><i class="fa-solid fa-pen-to-square"></i> Alasan Pulang Lebih Awal (< 16:00 WITA) <span class="required-star">*Wajib</span></label>
+          <textarea id="early-reason-input" rows="3" placeholder="Contoh: Sakit / Ada urusan keluarga mendadak..."></textarea>
+        </div>
+
+        <div class="absen-button-wrapper">
+          <button id="btn-absen" class="btn btn-absen btn-large">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="btn-absen-label">KIRIM PRESENSI DATANG</span>
+          </button>
+        </div>
+
+        <div id="result-alert" class="alert-box hidden"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY LOGS TABLE -->
+    <div class="glass-card table-card">
+      <div class="table-header">
+        <h3><i class="fa-solid fa-list-check"></i> Riwayat Presensi Hari Ini</h3>
+        <div class="user-actions">
+          <button id="btn-refresh-logs" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Absen Datang</th>
+              <th>Absen Pulang</th>
+              <th>Status Harian</th>
+              <th>IP & Jarak</th>
+              <th>Keterangan / Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body">
+            <tr>
+              <td colspan="6" class="text-center">Memuat riwayat presensi...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

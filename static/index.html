@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Presensi Kehadiran - Denpasar Bali</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="background-globes">
+    <div class="globe globe-1"></div>
+    <div class="globe globe-2"></div>
+  </div>
+
+  <!-- LOGIN SECTION -->
+  <div id="login-screen" class="screen active">
+    <div class="glass-card login-card">
+      <div class="logo-badge">
+        <i class="fa-solid fa-location-dot"></i>
+      </div>
+      <h2>Presensi Kehadiran</h2>
+      <p class="subtitle">Jl. Gatot Subroto I, Tonja, Denpasar Utara</p>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label><i class="fa-solid fa-user"></i> Username</label>
+          <select id="login-username" required>
+            <option value="" disabled selected>-- Pilih Akun --</option>
+            <option value="chris">chris</option>
+            <option value="deksa">deksa</option>
+            <option value="putra">putra</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fa-solid fa-key"></i> Password</label>
+          <input type="password" id="login-password" placeholder="Masukkan password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk Akun
+        </button>
+      </form>
+
+      <div class="account-hint">
+        <span><i class="fa-solid fa-circle-info"></i> Akun Default:</span>
+        <ul>
+          <li><b>chris</b> : 12310299</li>
+          <li><b>deksa</b> : 12310300</li>
+          <li><b>putra</b> : 12310311</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD SECTION -->
+  <div id="dashboard-screen" class="screen">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand">
+          <i class="fa-solid fa-shield-halved text-accent"></i>
+          <div>
+            <h1>Presensi Security App</h1>
+            <span class="location-tag"><i class="fa-solid fa-map-pin"></i> Jln Gatot Subroto I, Denpasar</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="user-chip">
+          <i class="fa-solid fa-user-gear"></i>
+          <span id="user-display-name">Guest</span>
+        </div>
+        <button id="btn-logout" class="btn btn-icon" title="Keluar">
+          <i class="fa-solid fa-power-off"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard-body">
+      <!-- TIME & STATUS TOP CARDS -->
+      <div class="card-grid">
+        <!-- Live Clock Card -->
+        <div class="glass-card info-card">
+          <div class="card-header">
+            <span class="card-title"><i class="fa-regular fa-clock"></i> Waktu Server (WITA)</span>
+            <span id="time-status-badge" class="badge badge-success">Absen Dibuka</span>
+          </div>
+          <div class="time-display" id="live-clock">00:00:00</div>
+          <div class="card-footer">
+            <i class="fa-solid fa-hourglass-half"></i> Batas Waktu: <b>08:30:00 WITA</b>
+          </div>
+        </div>
+
+        <!-- Location Geofence Card -->
+        <div class="glass-card info-card">
+          <div class="card-header">
+            <span class="card-title"><i class="fa-solid fa-compass"></i> Lokasi Anda (GPS)</span>
+            <span id="geo-status-badge" class="badge badge-warning">Memeriksa GPS...</span>
+          </div>
+          <div class="distance-display" id="geo-distance">-- m</div>
+          <div class="card-footer" id="geo-coords">
+            Lat: -- | Lng: -- (Radius Max: 100m)
+          </div>
+        </div>
+
+        <!-- IP Anti-Tipsen Card -->
+        <div class="glass-card info-card">
+          <div class="card-header">
+            <span class="card-title"><i class="fa-solid fa-network-wired"></i> Security IP (Anti-Tipsen)</span>
+            <span id="ip-status-badge" class="badge badge-danger">Belum Terdaftar</span>
+          </div>
+          <div class="ip-display" id="current-ip-display">--.--.--.--</div>
+          <div class="card-footer" id="ip-registered-footer">
+            Reg IP: <b id="reg-ip-text">Belum Terdaftar (Max 1 IP)</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN ACTION PANEL -->
+      <div class="glass-card action-card">
+        <div class="action-header">
+          <h3><i class="fa-solid fa-fingerprint"></i> Panel Eksekusi Presensi</h3>
+          <div class="test-controls">
+            <label class="toggle-switch">
+              <input type="checkbox" id="mock-location-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label"><i class="fa-solid fa-vial"></i> Simulasi Lokasi Tepat di Jln Gatsu I</span>
+          </div>
+        </div>
+
+        <div class="action-body">
+          <div class="ip-registration-banner" id="ip-register-banner">
+            <div class="banner-content">
+              <i class="fa-solid fa-shield-cat banner-icon"></i>
+              <div>
+                <h4>Registrasi IP Perangkat (Wajib 1x)</h4>
+                <p>Setiap akun hanya diizinkan terikat pada <b>1 IP Address</b> untuk mencegah titip absen.</p>
+              </div>
+            </div>
+            <button id="btn-register-ip" class="btn btn-warning">
+              <i class="fa-solid fa-lock"></i> Daftarkan IP Perangkat Ini
+            </button>
+          </div>
+
+          <div class="absen-button-wrapper">
+            <button id="btn-absen" class="btn btn-absen btn-large">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>KIRIM PRESENSI KEHADIRAN</span>
+            </button>
+          </div>
+
+          <div id="result-alert" class="alert-box hidden"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY LOGS TABLE -->
+      <div class="glass-card table-card">
+        <div class="table-header">
+          <h3><i class="fa-solid fa-list-check"></i> Riwayat Presensi Hari Ini</h3>
+          <button id="btn-refresh-logs" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Pengguna</th>
+                <th>IP Address</th>
+                <th>Jarak Lokasi</th>
+                <th>Status</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table-body">
+              <tr>
+                <td colspan="6" class="text-center">Memuat riwayat presensi...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
