@@ -38,6 +38,7 @@ func main() {
 	mux.HandleFunc("/api/register-ip", handler.RegisterIPHandler)
 	mux.HandleFunc("/api/absen", handler.AbsenHandler)
 	mux.HandleFunc("/api/logs", handler.LogsHandler)
+	mux.HandleFunc("/api/export-pdf", handler.ExportPDFHandler)
 	mux.HandleFunc("/api/logout", handler.LogoutHandler)
 
 	// Serve Static Embedded CSS/JS Assets

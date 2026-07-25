@@ -547,3 +547,33 @@ func (h *ServerHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(models.Response{Success: true, Message: "Logout berhasil"})
 }
+
+func (h *ServerHandler) ExportPDFHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("user_session")
+	if err != nil || cookie.Value == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	user, err := h.Store.GetUser(cookie.Value)
+	if err != nil {
+		http.Error(w, "User tidak ditemukan", http.StatusUnauthorized)
+		return
+	}
+
+	logs, err := h.Store.GetLogs(user.Username)
+	if err != nil {
+		logs = []models.AttendanceLog{}
+	}
+
+	pdfBytes, filename, err := services.GenerateAbsensiPDF(user.Username, logs)
+	if err != nil {
+		http.Error(w, "Gagal membuat PDF: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(pdfBytes)))
+	w.Write(pdfBytes)
+}

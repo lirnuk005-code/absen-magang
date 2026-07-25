@@ -38,6 +38,7 @@ func init() {
 	mux.HandleFunc("/api/register-ip", serverHandler.RegisterIPHandler)
 	mux.HandleFunc("/api/absen", serverHandler.AbsenHandler)
 	mux.HandleFunc("/api/logs", serverHandler.LogsHandler)
+	mux.HandleFunc("/api/export-pdf", serverHandler.ExportPDFHandler)
 	mux.HandleFunc("/api/logout", serverHandler.LogoutHandler)
 
 	// Serve Static Embedded Assets
