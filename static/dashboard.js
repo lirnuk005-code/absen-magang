@@ -348,6 +348,26 @@ document.addEventListener('DOMContentLoaded', () => {
         resultAlert.className = 'alert-box alert-success';
         resultAlert.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${json.message}`;
         earlyReasonInput.value = ''; // Reset reason input
+
+        // 1. Play Audio Sound Effect (mixkit-correct-answer-reward-952.wav)
+        try {
+          const successAudio = new Audio('success.wav');
+          successAudio.play().catch(e => console.log('Audio autoplay prevented:', e));
+        } catch (e) {}
+
+        // 2. Trigger Web Push Notification
+        const pushTitle = selectedType === 'DATANG' ? '☀️ Absen Datang Berhasil!' : (selectedType === 'PULANG' ? '🌙 Absen Pulang Berhasil!' : '🏥 Presensi Izin/Sakit Berhasil!');
+        const pushBody = selectedType === 'DATANG' ? 'Presensi DATANG Anda telah dicatat. Selamat bekerja!' : (selectedType === 'PULANG' ? 'Presensi PULANG Anda telah dicatat. Hati-hati di jalan!' : 'Pengajuan Izin/Sakit Anda telah dicatat.');
+
+        if ('Notification' in window) {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') sendPushNotification(pushTitle, pushBody);
+            });
+          } else if (Notification.permission === 'granted') {
+            sendPushNotification(pushTitle, pushBody);
+          }
+        }
       } else {
         resultAlert.className = 'alert-box alert-error';
         resultAlert.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${json.message}`;
