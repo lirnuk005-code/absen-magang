@@ -157,6 +157,8 @@ func (h *ServerHandler) MeHandler(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Data: M{
 			"username":           user.Username,
+			"full_name":          services.GetFullName(user.Username),
+			"nim":                services.GetNIM(user.Username),
 			"registered_ip":      user.RegisteredIP,
 			"current_ip":         clientIP,
 			"target_loc":         "Jalan Gatot Subroto I, Tonja, Denpasar Utara, Denpasar, Bali",

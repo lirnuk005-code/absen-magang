@@ -80,3 +80,31 @@ func GetDayNameIndonesian(weekday time.Weekday) string {
 	}
 	return days[weekday]
 }
+
+// GetFullName returns student's official full name
+func GetFullName(username string) string {
+	switch username {
+	case "chris":
+		return "Christopher Natanael"
+	case "deksa":
+		return "I Kadek Mahesa Parwata Gandhi"
+	case "putra":
+		return "I Gede Agus Nova Pratama Putra"
+	default:
+		return username
+	}
+}
+
+// GetNIM returns student's official NIM
+func GetNIM(username string) string {
+	switch username {
+	case "chris":
+		return "12310299"
+	case "deksa":
+		return "12310300"
+	case "putra":
+		return "12310311"
+	default:
+		return "-"
+	}
+}

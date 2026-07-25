@@ -140,7 +140,10 @@
     <div class="glass-card table-card">
       <div class="table-header">
         <h3><i class="fa-solid fa-list-check"></i> Riwayat Presensi Hari Ini</h3>
-        <div class="user-actions">
+        <div class="user-actions" style="display: flex; gap: 8px;">
+          <button id="btn-export-pdf" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-file-pdf"></i> Export PDF Absensi
+          </button>
           <button id="btn-refresh-logs" class="btn btn-outline btn-sm">
             <i class="fa-solid fa-rotate-right"></i> Refresh
           </button>
@@ -169,6 +172,8 @@
     </div>
   </main>
 
-  <script src="dashboard.js?v=9"></script>
+  <!-- HTML2PDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="dashboard.js?v=10"></script>
 </body>
 </html>

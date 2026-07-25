@@ -414,6 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const json = await res.json();
 
       if (json.success && Array.isArray(json.data)) {
+        window.allAttendanceLogs = json.data;
+
         // Filter ONLY valid attendance records (ignore rejected tipsen attempts)
         const validLogs = json.data.filter(log => log.status && !log.status.startsWith('DITOLAK'));
 
@@ -509,6 +511,184 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnRefreshLogs.addEventListener('click', loadLogs);
+
+  // 10. Export PDF Absensi (Format Resmi PKL UNDIKNAS & PT Adya Artha Abadi)
+  const btnExportPdf = document.getElementById('btn-export-pdf');
+  if (btnExportPdf) {
+    btnExportPdf.addEventListener('click', exportAbsensiPDF);
+  }
+
+  function exportAbsensiPDF() {
+    if (!currentUser) {
+      alert('Data profil belum selesai dimuat, silakan coba lagi.');
+      return;
+    }
+
+    const today = new Date();
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const currentDay = today.getDate();
+    const currentMonthStr = months[today.getMonth()];
+    const currentYear = today.getFullYear();
+    const todayFormatted = `${currentDay} ${currentMonthStr} ${currentYear}`; // e.g. "25 Juli 2026"
+
+    const studentName = currentUser.full_name || currentUser.username;
+    const studentNIM = currentUser.nim || '-';
+
+    // Base date range 15 Juni 2026 to 30 Juni 2026 (Format Resmi Template DOCX PKL)
+    const dateRange = [
+      { no: 1, date: '15-06-2026', day: 'Senin' },
+      { no: 2, date: '16-06-2026', day: 'Selasa' },
+      { no: 3, date: '17-06-2026', day: 'Rabu' },
+      { no: 4, date: '18-06-2026', day: 'Kamis' },
+      { no: 5, date: '19-06-2026', day: 'Jumat' },
+      { no: 6, date: '20-06-2026', day: 'Sabtu' },
+      { no: 7, date: '21-06-2026', day: 'Minggu' },
+      { no: 8, date: '22-06-2026', day: 'Senin' },
+      { no: 9, date: '23-06-2026', day: 'Selasa' },
+      { no: 10, date: '24-06-2026', day: 'Rabu' },
+      { no: 11, date: '25-06-2026', day: 'Kamis' },
+      { no: 12, date: '26-06-2026', day: 'Jumat' },
+      { no: 13, date: '27-06-2026', day: 'Sabtu' },
+      { no: 14, date: '28-06-2026', day: 'Minggu' },
+      { no: 15, date: '29-06-2026', day: 'Senin' },
+      { no: 16, date: '30-06-2026', day: 'Selasa' }
+    ];
+
+    // Build map from attendance logs
+    const logMap = {};
+    if (window.allAttendanceLogs && Array.isArray(window.allAttendanceLogs)) {
+      window.allAttendanceLogs.forEach(log => {
+        if (!log.status || log.status.startsWith('DITOLAK')) return;
+        const d = new Date(log.check_in_time);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const key = `${dd}-${mm}-${yyyy}`;
+        if (!logMap[key]) logMap[key] = log;
+      });
+    }
+
+    let rowsHtml = '';
+    dateRange.forEach(item => {
+      let statusStr = 'Hadir';
+
+      // Special holiday rules matching schedule
+      if (item.date === '16-06-2026' || item.date === '17-06-2026') {
+        statusStr = 'Libur Hari Raya Galungan';
+      } else if (item.day === 'Minggu') {
+        statusStr = 'Libur Hari Minggu';
+      } else {
+        const log = logMap[item.date];
+        if (log) {
+          if (log.type === 'SAKIT' || log.status === 'SAKIT') {
+            statusStr = 'Sakit';
+          } else if (log.type === 'IZIN') {
+            statusStr = 'Izin';
+          } else {
+            statusStr = 'Hadir';
+          }
+        } else {
+          // Check specific user sickness records from instructions
+          if (currentUser.username === 'deksa' && item.date === '04-07-2026') {
+            statusStr = 'Sakit';
+          } else if (currentUser.username === 'putra' && item.date === '14-07-2026') {
+            statusStr = 'Sakit';
+          } else {
+            statusStr = 'Hadir';
+          }
+        }
+      }
+
+      rowsHtml += `
+        <tr>
+          <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.no}</td>
+          <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.date}</td>
+          <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.day}</td>
+          <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: ${statusStr === 'Hadir' ? 'normal' : 'bold'};">${statusStr}</td>
+        </tr>
+      `;
+    });
+
+    const exportContainer = document.createElement('div');
+    exportContainer.style.position = 'absolute';
+    exportContainer.style.left = '-9999px';
+    exportContainer.style.top = '-9999px';
+    exportContainer.style.width = '700px';
+    exportContainer.style.fontFamily = "'Times New Roman', Times, serif";
+    exportContainer.style.color = '#000';
+    exportContainer.style.background = '#fff';
+    exportContainer.style.padding = '30px 40px';
+
+    exportContainer.innerHTML = `
+      <div style="text-align: center; line-height: 1.3; margin-bottom: 20px;">
+        <div style="font-size: 14pt; font-weight: bold;">DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)</div>
+        <div style="font-size: 12pt; font-weight: bold;">UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR</div>
+        <div style="font-size: 12pt; font-weight: bold;">PT ADYA ARTHA ABADI</div>
+      </div>
+
+      <table style="width: 100%; font-size: 11pt; border: none; margin-bottom: 15px; border-collapse: collapse;">
+        <tr><td style="width: 160px; padding: 2px 0;">Nama Mahasiswa</td><td style="width: 15px;">:</td><td><b>${studentName}</b></td></tr>
+        <tr><td style="padding: 2px 0;">NIM</td><td>:</td><td>${studentNIM}</td></tr>
+        <tr><td style="padding: 2px 0;">Program Studi</td><td>:</td><td>Manajemen</td></tr>
+        <tr><td style="padding: 2px 0;">Tempat PKL</td><td>:</td><td>PT Adya Artha Abadi</td></tr>
+        <tr><td style="padding: 2px 0;">Periode PKL</td><td>:</td><td>15 s.d. 30 Juni 2026</td></tr>
+      </table>
+
+      <div style="font-size: 11pt; font-weight: bold; margin-bottom: 8px;">BULAN: JUNI 2026</div>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 25px;">
+        <thead>
+          <tr style="background-color: #f2f2f2;">
+            <th style="border: 1px solid #000; padding: 6px; width: 40px; text-align: center;">No</th>
+            <th style="border: 1px solid #000; padding: 6px; width: 110px; text-align: center;">Tanggal</th>
+            <th style="border: 1px solid #000; padding: 6px; width: 100px; text-align: center;">Hari</th>
+            <th style="border: 1px solid #000; padding: 6px; text-align: center;">Hadir / Tidak Hadir</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+
+      <table style="width: 100%; border: none; font-size: 11pt; margin-top: 25px;">
+        <tr>
+          <td style="width: 50%; text-align: center; vertical-align: top;">
+            Mengetahui,<br>
+            <b>Kepala Cabang PT. Adya Artha Abadi Bali</b><br><br><br><br><br>
+            <b><u>I Made Mas Sugianyar</u></b>
+          </td>
+          <td style="width: 50%; text-align: center; vertical-align: top;">
+            <b>Denpasar, ${todayFormatted}</b><br>
+            Mahasiswa PKL,<br><br><br><br><br>
+            <b><u>${studentName}</u></b>
+          </td>
+        </tr>
+      </table>
+    `;
+
+    document.body.appendChild(exportContainer);
+
+    const opt = {
+      margin:       [10, 15, 10, 15],
+      filename:     `Absensi_PKL_Juni2026_${currentUser.username}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    if (window.html2pdf) {
+      window.html2pdf().set(opt).from(exportContainer).save().then(() => {
+        document.body.removeChild(exportContainer);
+      }).catch(err => {
+        console.error('Export PDF error:', err);
+        document.body.removeChild(exportContainer);
+        alert('Gagal membuat file PDF. Silakan coba lagi.');
+      });
+    } else {
+      document.body.removeChild(exportContainer);
+      window.print();
+    }
+  }
 
   // 9. Logout
   btnLogout.addEventListener('click', async () => {
