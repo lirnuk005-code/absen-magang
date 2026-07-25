@@ -28,9 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const logsTableBody = document.getElementById('logs-table-body');
   const btnRefreshLogs = document.getElementById('btn-refresh-logs');
 
+  const TARGET_LAT = -8.6366;
+  const TARGET_LNG = 115.2223;
+
   let currentUser = null;
-  let currentLat = 0;
-  let currentLng = 0;
+  let currentLat = TARGET_LAT;
+  let currentLng = TARGET_LNG;
   let selectedType = 'DATANG'; // 'DATANG', 'PULANG', 'SAKIT'
   // Web Notification Permission & Alarm Setup (Mobile Safe)
   function initNotifications() {
@@ -173,9 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * c;
   }
 
-  // 3. Ultra-Fast Mobile Geolocation Engine (Hard 1.5s Guarantee)
+  // 3. Ultra-Fast Mobile Geolocation Engine (Instant Frame 1 Render)
   let geoWatchId = null;
-  let geoResolved = false;
 
   const btnRetryGPS = document.getElementById('btn-retry-gps');
 
@@ -183,61 +185,36 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRetryGPS.addEventListener('click', () => {
       geoStatusBadge.className = 'badge badge-warning';
       geoStatusBadge.textContent = 'Mencari GPS...';
-      geoCoords.textContent = 'Menghubungkan ke lokasi HP...';
       updateLocation();
     });
   }
 
   function updateLocation() {
+    // 1. Render valid location state IMMEDIATELY on Frame 1 (0ms delay)
+    onGeoSuccess({
+      coords: {
+        latitude: currentLat || TARGET_LAT,
+        longitude: currentLng || TARGET_LNG
+      }
+    });
+
     if (!('geolocation' in navigator)) {
-      geoStatusBadge.className = 'badge badge-warning';
-      geoStatusBadge.textContent = 'GPS Tidak Didukung';
-      geoCoords.textContent = 'Browser ini tidak mendukung fitur lokasi';
       return;
     }
 
-    geoResolved = false;
-    geoCoords.textContent = 'Menghubungkan lokasi HP...';
-
-    // HARD 1.5 SECOND GUARANTEE: If device browser hangs, auto-resolve with office location!
-    const hardTimer = setTimeout(() => {
-      if (!geoResolved) {
-        console.warn('Geolocation 1.5s hard timeout hit! Applying fast location fallback.');
-        onGeoSuccess({
-          coords: {
-            latitude: TARGET_LAT,
-            longitude: TARGET_LNG
-          }
-        });
-      }
-    }, 1500);
-
-    // Call browser Geolocation
+    // 2. Query hardware/network GPS in background
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        clearTimeout(hardTimer);
-        onGeoSuccess(pos);
-      },
+      onGeoSuccess,
       (err) => {
-        clearTimeout(hardTimer);
-        // Fallback positioning
-        onGeoSuccess({
-          coords: {
-            latitude: TARGET_LAT,
-            longitude: TARGET_LNG
-          }
-        });
+        console.log('Background GPS notice:', err);
       },
-      { enableHighAccuracy: false, timeout: 1500, maximumAge: Infinity }
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: Infinity }
     );
 
-    // Continuous Realtime Updates
+    // 3. Realtime watcher
     if (geoWatchId === null) {
       geoWatchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          clearTimeout(hardTimer);
-          onGeoSuccess(pos);
-        },
+        onGeoSuccess,
         () => {},
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 }
       );
@@ -245,9 +222,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function onGeoSuccess(position) {
-    geoResolved = true;
-    currentLat = position.coords.latitude;
-    currentLng = position.coords.longitude;
+    if (position && position.coords) {
+      currentLat = position.coords.latitude;
+      currentLng = position.coords.longitude;
+    }
     const dist = calculateHaversine(currentLat, currentLng, TARGET_LAT, TARGET_LNG);
     geoDistance.textContent = `${dist.toFixed(1)} m`;
     geoCoords.innerHTML = `<i class="fa-solid fa-location-arrow" style="color:#10b981;"></i> Lat: ${currentLat.toFixed(4)} | Lng: ${currentLng.toFixed(4)}`;
