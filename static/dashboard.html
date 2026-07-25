@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <div class="background-globes">
@@ -61,8 +61,11 @@
       <!-- Location Geofence Card -->
       <div class="glass-card info-card">
         <div class="card-header">
-          <span class="card-title"><i class="fa-solid fa-compass"></i> Lokasi Anda (GPS)</span>
-          <span id="geo-status-badge" class="badge badge-warning">Memeriksa GPS...</span>
+          <span class="card-title"><i class="fa-solid fa-location-dot"></i> Status Lokasi Presensi</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button id="btn-retry-gps" class="btn-outline btn-sm" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-location-crosshairs"></i> Cek Ulang GPS</button>
+            <span id="geo-status-badge" class="badge badge-warning">Mendeteksi...</span>
+          </div>
         </div>
         <div class="distance-display" id="geo-distance">-- m</div>
         <div class="card-footer" id="geo-coords">

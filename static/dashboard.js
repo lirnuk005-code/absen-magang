@@ -173,40 +173,46 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * c;
   }
 
-  // 3. Ultra-Fast Mobile Geolocation Engine (Zero Delay)
+  // 3. Ultra-Fast Mobile Geolocation Engine (Zero Delay & Diagnostics)
   let geoWatchId = null;
+  const btnRetryGPS = document.getElementById('btn-retry-gps');
+
+  if (btnRetryGPS) {
+    btnRetryGPS.addEventListener('click', () => {
+      geoStatusBadge.className = 'badge badge-warning';
+      geoStatusBadge.textContent = 'Mencari GPS...';
+      geoCoords.textContent = 'Menghubungkan ke lokasi HP...';
+      updateLocation();
+    });
+  }
 
   function updateLocation() {
     if (!('geolocation' in navigator)) {
       geoStatusBadge.className = 'badge badge-warning';
       geoStatusBadge.textContent = 'GPS Tidak Didukung';
-      geoCoords.textContent = 'Browser Anda tidak mendukung fitur Geolocation';
+      geoCoords.textContent = 'Browser ini tidak mendukung fitur lokasi';
       return;
     }
 
-    geoCoords.textContent = 'Mendeteksi lokasi GPS HP...';
+    // Fast Immediate Network/Cell Positioning First (Zero Delay)
+    const optionsFast = { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 };
+    const optionsAccurate = { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 };
 
-    // Primary High-Accuracy Fast Fetch (5s Timeout)
     navigator.geolocation.getCurrentPosition(
       onGeoSuccess,
       (err) => {
-        console.warn('GPS High-Accuracy Timeout/Error, switching to Fast Network Location:', err);
-        // Secondary Fast Fallback (Cell/Wi-Fi Location, Instant)
-        navigator.geolocation.getCurrentPosition(
-          onGeoSuccess,
-          onGeoError,
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
-        );
+        // Retry with high accuracy if fast positioning failed
+        navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError, optionsAccurate);
       },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+      optionsFast
     );
 
-    // Real-Time Smooth Watch Position
+    // Continuous Realtime Updates
     if (geoWatchId === null) {
       geoWatchId = navigator.geolocation.watchPosition(
         onGeoSuccess,
         () => {},
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
       );
     }
   }
@@ -216,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentLng = position.coords.longitude;
     const dist = calculateHaversine(currentLat, currentLng, TARGET_LAT, TARGET_LNG);
     geoDistance.textContent = `${dist.toFixed(1)} m`;
-    geoCoords.textContent = `Lat: ${currentLat.toFixed(4)} | Lng: ${currentLng.toFixed(4)}`;
+    geoCoords.innerHTML = `<i class="fa-solid fa-location-arrow" style="color:#10b981;"></i> Lat: ${currentLat.toFixed(4)} | Lng: ${currentLng.toFixed(4)}`;
 
     if (dist <= 800) {
       geoStatusBadge.className = 'badge badge-success';
@@ -228,13 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function onGeoError(error) {
-    geoStatusBadge.className = 'badge badge-warning';
+    geoStatusBadge.className = 'badge badge-danger';
     if (error.code === error.PERMISSION_DENIED) {
-      geoStatusBadge.textContent = 'Akses GPS Ditolak';
-      geoCoords.textContent = 'Izinkan akses lokasi pada pengaturan browser HP Anda';
+      geoStatusBadge.textContent = 'GPS Diblokir Browser';
+      geoCoords.innerHTML = '⚠️ <b>Akses Lokasi Diblokir!</b> Klik ikon 🔒 <b>Gembok</b> di pojok kiri URL browser HP -> Ubah Lokasi ke <b>"Izinkan" (Allow)</b> lalu klik Cek Ulang GPS.';
+    } else if (error.code === error.TIMEOUT) {
+      geoStatusBadge.textContent = 'Waktu GPS Habis';
+      geoCoords.innerHTML = '⏱️ Batas waktu GPS habis. Pastikan <b>Lokasi / Location</b> di HP Anda sudah dinyalakan lalu klik "Cek Ulang GPS".';
     } else {
-      geoStatusBadge.textContent = 'GPS Diperlukan';
-      geoCoords.textContent = 'Pastikan GPS HP aktif & berada di area terbuka';
+      geoStatusBadge.textContent = 'GPS Tidak Terhubung';
+      geoCoords.innerHTML = '📍 Nyalakan Fitur Lokasi/GPS di Pengaturan HP Anda lalu klik "Cek Ulang GPS".';
     }
   }
 
