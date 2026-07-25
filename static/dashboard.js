@@ -173,32 +173,68 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * c;
   }
 
-  // 3. Geolocation Update (Real Device GPS)
-  function updateLocation() {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          currentLat = position.coords.latitude;
-          currentLng = position.coords.longitude;
-          const dist = calculateHaversine(currentLat, currentLng, TARGET_LAT, TARGET_LNG);
-          geoDistance.textContent = `${dist.toFixed(1)} m`;
-          geoCoords.textContent = `Lat: ${currentLat.toFixed(4)} | Lng: ${currentLng.toFixed(4)}`;
+  // 3. Ultra-Fast Mobile Geolocation Engine (Zero Delay)
+  let geoWatchId = null;
 
-          if (dist <= 800) {
-            geoStatusBadge.className = 'badge badge-success';
-            geoStatusBadge.textContent = 'Dalam radius kantor';
-          } else {
-            geoStatusBadge.className = 'badge badge-danger';
-            geoStatusBadge.textContent = 'Di luar radius kantor';
-          }
-        },
-        (error) => {
-          geoStatusBadge.className = 'badge badge-warning';
-          geoStatusBadge.textContent = 'GPS Diperlukan';
-          geoCoords.textContent = 'Izinkan akses lokasi GPS pada browser HP Anda';
-        },
-        { enableHighAccuracy: true }
+  function updateLocation() {
+    if (!('geolocation' in navigator)) {
+      geoStatusBadge.className = 'badge badge-warning';
+      geoStatusBadge.textContent = 'GPS Tidak Didukung';
+      geoCoords.textContent = 'Browser Anda tidak mendukung fitur Geolocation';
+      return;
+    }
+
+    geoCoords.textContent = 'Mendeteksi lokasi GPS HP...';
+
+    // Primary High-Accuracy Fast Fetch (5s Timeout)
+    navigator.geolocation.getCurrentPosition(
+      onGeoSuccess,
+      (err) => {
+        console.warn('GPS High-Accuracy Timeout/Error, switching to Fast Network Location:', err);
+        // Secondary Fast Fallback (Cell/Wi-Fi Location, Instant)
+        navigator.geolocation.getCurrentPosition(
+          onGeoSuccess,
+          onGeoError,
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+    );
+
+    // Real-Time Smooth Watch Position
+    if (geoWatchId === null) {
+      geoWatchId = navigator.geolocation.watchPosition(
+        onGeoSuccess,
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
       );
+    }
+  }
+
+  function onGeoSuccess(position) {
+    currentLat = position.coords.latitude;
+    currentLng = position.coords.longitude;
+    const dist = calculateHaversine(currentLat, currentLng, TARGET_LAT, TARGET_LNG);
+    geoDistance.textContent = `${dist.toFixed(1)} m`;
+    geoCoords.textContent = `Lat: ${currentLat.toFixed(4)} | Lng: ${currentLng.toFixed(4)}`;
+
+    if (dist <= 800) {
+      geoStatusBadge.className = 'badge badge-success';
+      geoStatusBadge.textContent = 'Dalam radius kantor';
+    } else {
+      geoStatusBadge.className = 'badge badge-danger';
+      geoStatusBadge.textContent = 'Di luar radius kantor';
+    }
+  }
+
+  function onGeoError(error) {
+    geoStatusBadge.className = 'badge badge-warning';
+    if (error.code === error.PERMISSION_DENIED) {
+      geoStatusBadge.textContent = 'Akses GPS Ditolak';
+      geoCoords.textContent = 'Izinkan akses lokasi pada pengaturan browser HP Anda';
+    } else {
+      geoStatusBadge.textContent = 'GPS Diperlukan';
+      geoCoords.textContent = 'Pastikan GPS HP aktif & berada di area terbuka';
     }
   }
 
