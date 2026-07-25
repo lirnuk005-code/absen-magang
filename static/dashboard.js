@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const userDisplayName = document.getElementById('user-display-name');
+  const userDisplayName = document.getElementById('user-display') || document.getElementById('user-display-name');
   const btnLogout = document.getElementById('btn-logout');
 
   // Status Displays
@@ -261,28 +261,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (json.success) {
         currentUser = json.data;
-        userDisplayName.textContent = currentUser.username;
-        currentIpDisplay.textContent = currentUser.current_ip;
+        if (userDisplayName) userDisplayName.textContent = currentUser.username;
+        if (currentIpDisplay) currentIpDisplay.textContent = currentUser.current_ip;
 
         if (currentUser.registered_ip) {
-          regIpText.textContent = currentUser.registered_ip;
-          ipStatusBadge.className = 'badge badge-success';
-          ipStatusBadge.textContent = '1 IP Terdaftar (Terkunci)';
-          ipRegisterBanner.style.display = 'none';
+          if (regIpText) regIpText.textContent = currentUser.registered_ip;
+          if (ipStatusBadge) {
+            ipStatusBadge.className = 'badge badge-success';
+            ipStatusBadge.textContent = '1 IP Terdaftar (Terkunci)';
+          }
+          if (ipRegisterBanner) ipRegisterBanner.style.display = 'none';
         } else {
-          regIpText.textContent = 'Belum Terdaftar (Max 1 IP)';
-          ipStatusBadge.className = 'badge badge-danger';
-          ipStatusBadge.textContent = 'Belum Terdaftar';
-          ipRegisterBanner.style.display = 'flex';
+          if (regIpText) regIpText.textContent = 'Belum Terdaftar (Max 1 IP)';
+          if (ipStatusBadge) {
+            ipStatusBadge.className = 'badge badge-danger';
+            ipStatusBadge.textContent = 'Belum Terdaftar';
+          }
+          if (ipRegisterBanner) ipRegisterBanner.style.display = 'flex';
         }
 
         updateLocation();
         loadLogs();
       } else {
+        console.warn('Session inactive, redirecting to login');
         window.location.href = '/login';
       }
     } catch (err) {
-      window.location.href = '/login';
+      console.error('fetchUserData error:', err);
     }
   }
 
