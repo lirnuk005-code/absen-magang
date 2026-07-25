@@ -7,7 +7,14 @@ import (
 
 	"github.com/go-pdf/fpdf"
 	"me.absen/app/models"
+	"me.absen/app/static"
 )
+
+type DateRow struct {
+	No   string
+	Date string
+	Day  string
+}
 
 func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, string, error) {
 	fullName := GetFullName(username)
@@ -42,32 +49,50 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 		}
 	}
 
-	dateRange := []struct {
-		No   string
-		Date string
-		Day  string
-	}{
-		{"1", "15-06-2026", "Senin"},
-		{"2", "16-06-2026", "Selasa"},
-		{"3", "17-06-2026", "Rabu"},
-		{"4", "18-06-2026", "Kamis"},
-		{"5", "19-06-2026", "Jumat"},
-		{"6", "20-06-2026", "Sabtu"},
-		{"7", "21-06-2026", "Minggu"},
-		{"8", "22-06-2026", "Senin"},
-		{"9", "23-06-2026", "Selasa"},
-		{"10", "24-06-2026", "Rabu"},
-		{"11", "25-06-2026", "Kamis"},
-		{"12", "26-06-2026", "Jumat"},
-		{"13", "27-06-2026", "Sabtu"},
-		{"14", "28-06-2026", "Minggu"},
-		{"15", "29-06-2026", "Senin"},
-		{"16", "30-06-2026", "Selasa"},
+	// Dynamic Date Range: From 15 June 2026 up to today's date (or 30 June 2026 minimum)
+	startDate := time.Date(2026, 6, 15, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
+	endDate := now
+	minEndDate := time.Date(2026, 6, 30, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
+	if endDate.Before(minEndDate) {
+		endDate = minEndDate
+	}
+
+	var dateRange []DateRow
+	noIdx := 1
+	for curr := startDate; !curr.After(endDate); curr = curr.AddDate(0, 0, 1) {
+		dayStr := GetDayNameIndonesian(curr.Weekday())
+		dateStr := curr.Format("02-01-2006")
+		dateRange = append(dateRange, DateRow{
+			No:   fmt.Sprintf("%d", noIdx),
+			Date: dateStr,
+			Day:  dayStr,
+		})
+		noIdx++
+	}
+
+	monthTitle := "BULAN: JUNI 2026"
+	if now.Month() == time.July {
+		monthTitle = "BULAN: JUNI - JULI 2026"
+	} else if now.Month() > time.July {
+		monthTitle = fmt.Sprintf("BULAN: JUNI - %s %d", stringsToUpper(months[now.Month()]), now.Year())
 	}
 
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.SetMargins(15, 15, 15)
 	pdf.AddPage()
+
+	// Register & Render Logos (Undiknas & PT Adya Artha Abadi)
+	undiknasBytes, err := static.Files.ReadFile("logo_undiknas.png")
+	if err == nil {
+		pdf.RegisterImageOptionsReader("logo_undiknas", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(undiknasBytes))
+		pdf.ImageOptions("logo_undiknas", 15, 10, 20, 20, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+	}
+
+	companyBytes, err := static.Files.ReadFile("logo_company.png")
+	if err == nil {
+		pdf.RegisterImageOptionsReader("logo_company", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(companyBytes))
+		pdf.ImageOptions("logo_company", 172, 11, 23, 16, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+	}
 
 	// Header Title
 	pdf.SetFont("Times", "B", 13)
@@ -103,7 +128,7 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 
 	pdf.Ln(4)
 	pdf.SetFont("Times", "B", 10.5)
-	pdf.CellFormat(180, 5, "BULAN: JUNI 2026", "", 1, "L", false, 0, "")
+	pdf.CellFormat(180, 5, monthTitle, "", 1, "L", false, 0, "")
 	pdf.Ln(2)
 
 	// Table Header
@@ -140,27 +165,30 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 			pdf.SetFont("Times", "", 9.5)
 		}
 
-		pdf.CellFormat(15, 6, item.No, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(40, 6, item.Date, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(40, 6, item.Day, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(85, 6, statusStr, "1", 1, "C", false, 0, "")
+		pdf.CellFormat(15, 5.5, item.No, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(40, 5.5, item.Date, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(40, 5.5, item.Day, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(85, 5.5, statusStr, "1", 1, "C", false, 0, "")
 	}
 
-	pdf.Ln(10)
+	pdf.Ln(8)
 
-	// Signature Section
+	// Signature Section (No "Mengetahui," line for Kepala Cabang)
 	ySig := pdf.GetY()
-	pdf.SetFont("Times", "", 10.5)
+	// Check page overflow for signature block
+	if ySig > 240 {
+		pdf.AddPage()
+		ySig = 20
+	}
+
+	pdf.SetFont("Times", "B", 10.5)
 	pdf.SetXY(15, ySig)
-	pdf.CellFormat(90, 5, "Mengetahui,", "", 0, "C", false, 0, "")
+	pdf.CellFormat(90, 5, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
 	pdf.SetXY(105, ySig)
+	pdf.SetFont("Times", "", 10.5)
 	pdf.CellFormat(90, 5, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
 
-	pdf.SetXY(15, ySig+5)
-	pdf.SetFont("Times", "B", 10.5)
-	pdf.CellFormat(90, 5, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
 	pdf.SetXY(105, ySig+5)
-	pdf.SetFont("Times", "", 10.5)
 	pdf.CellFormat(90, 5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
 
 	pdf.SetXY(15, ySig+28)
@@ -170,11 +198,15 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	pdf.CellFormat(90, 5, fullName, "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
-	err := pdf.Output(&buf)
+	err = pdf.Output(&buf)
 	if err != nil {
 		return nil, "", err
 	}
 
 	filename := fmt.Sprintf("Absensi_PKL_Juni2026_%s.pdf", username)
 	return buf.Bytes(), filename, nil
+}
+
+func stringsToUpper(s string) string {
+	return fmt.Sprintf("%s", bytes.ToUpper([]byte(s)))
 }
