@@ -32,22 +32,22 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentLat = 0;
   let currentLng = 0;
   let selectedType = 'DATANG'; // 'DATANG', 'PULANG', 'SAKIT'
-  // Web Notification Automatic Permission & Alarm Setup
+  // Web Notification Permission & Alarm Setup (Mobile Safe)
   function initNotifications() {
-    if ('Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-    }
+    // Do NOT auto-prompt requestPermission on page load to prevent mobile browser touch freezing
   }
 
   function sendPushNotification(title, body) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, {
-        body: body,
-        icon: 'https://cdn-icons-png.flaticon.com/512/3239/3239952.png',
-        tag: 'absen-reminder'
-      });
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+          body: body,
+          icon: 'https://cdn-icons-png.flaticon.com/512/3239/3239952.png',
+          tag: 'absen-reminder'
+        });
+      }
+    } catch (e) {
+      console.log('Mobile notification not supported or blocked:', e);
     }
   }
 

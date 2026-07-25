@@ -159,14 +159,23 @@ body {
   color: var(--text-main);
 }
 
-/* BUTTONS */
-.btn {
+/* BUTTONS & TOUCH OPTIMIZATION */
+.btn, button, .type-btn, input, select, textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn, button, .type-btn {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  z-index: 5;
   padding: 14px 24px;
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   border: none;
   display: inline-flex;
   align-items: center;
@@ -512,6 +521,9 @@ input:checked + .slider:before {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
