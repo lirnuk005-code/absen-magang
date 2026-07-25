@@ -10,38 +10,37 @@ import (
 	"me.absen/app/static"
 )
 
-type DateRow struct {
-	No   string
-	Date string
-	Day  string
+type MonthMatrix struct {
+	Title    string
+	Year     int
+	Month    time.Month
+	StartDay int
+	EndDay   int
 }
 
-func getStatusStr(item DateRow, logMap map[string]*models.AttendanceLog, username string) string {
-	if item.Date == "16-06-2026" || item.Date == "17-06-2026" {
-		return "Libur Hari Raya Galungan"
+func getStatusCode(dateStr string, dayName string, logMap map[string]*models.AttendanceLog, username string) (string, [3]int) {
+	if dateStr == "16-06-2026" || dateStr == "17-06-2026" || dateStr == "17-08-2026" {
+		return "L", [3]int{230, 230, 230} // Light Grey (Libur)
 	}
-	if item.Date == "17-08-2026" {
-		return "Libur Kemerdekaan RI"
+	if dayName == "Minggu" {
+		return "L", [3]int{240, 240, 240} // Light Grey (Libur Minggu)
 	}
-	if item.Day == "Minggu" {
-		return "Libur Hari Minggu"
-	}
-	if log, ok := logMap[item.Date]; ok {
+	if log, ok := logMap[dateStr]; ok {
 		if log.Type == "SAKIT" || log.Status == "SAKIT" {
-			return "Sakit"
+			return "S", [3]int{255, 220, 220} // Light Red (Sakit)
 		}
 		if log.Type == "IZIN" {
-			return "Izin"
+			return "I", [3]int{255, 245, 200} // Light Yellow (Izin)
 		}
-		return "Hadir"
+		return "H", [3]int{225, 245, 225} // Light Green (Hadir)
 	}
-	if username == "deksa" && item.Date == "04-07-2026" {
-		return "Sakit"
+	if username == "deksa" && dateStr == "04-07-2026" {
+		return "S", [3]int{255, 220, 220}
 	}
-	if username == "putra" && item.Date == "14-07-2026" {
-		return "Sakit"
+	if username == "putra" && dateStr == "14-07-2026" {
+		return "S", [3]int{255, 220, 220}
 	}
-	return "Hadir"
+	return "H", [3]int{225, 245, 225}
 }
 
 func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, string, error) {
@@ -77,128 +76,155 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 		}
 	}
 
-	// Full Internship Date Range: 15 Juni 2026 s.d. 31 Agustus 2026 (78 Days total)
-	startDate := time.Date(2026, 6, 15, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
-	endDate := time.Date(2026, 8, 31, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
-
-	var dateRange []DateRow
-	noIdx := 1
-	for curr := startDate; !curr.After(endDate); curr = curr.AddDate(0, 0, 1) {
-		dayStr := GetDayNameIndonesian(curr.Weekday())
-		dateStr := curr.Format("02-01-2006")
-		dateRange = append(dateRange, DateRow{
-			No:   fmt.Sprintf("%d", noIdx),
-			Date: dateStr,
-			Day:  dayStr,
-		})
-		noIdx++
-	}
-
 	pdf := fpdf.New("P", "mm", "A4", "")
-	pdf.SetMargins(15, 15, 15)
-	pdf.SetAutoPageBreak(true, 15)
+	pdf.SetMargins(12, 12, 12)
 	pdf.AddPage()
 
 	// Register & Render Logos (Undiknas & PT Adya Artha Abadi)
 	undiknasBytes, err := static.Files.ReadFile("logo_undiknas.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_undiknas", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(undiknasBytes))
-		pdf.ImageOptions("logo_undiknas", 15, 10, 20, 20, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_undiknas", 12, 10, 20, 20, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
 	companyBytes, err := static.Files.ReadFile("logo_company.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_company", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(companyBytes))
-		pdf.ImageOptions("logo_company", 172, 11, 23, 16, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_company", 176, 11, 22, 16, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
 	// Header Title
-	pdf.SetFont("Times", "B", 13)
-	pdf.CellFormat(180, 6, "DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)", "", 1, "C", false, 0, "")
-	pdf.SetFont("Times", "B", 11)
-	pdf.CellFormat(180, 5, "UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR", "", 1, "C", false, 0, "")
-	pdf.CellFormat(180, 5, "PT ADYA ARTHA ABADI", "", 1, "C", false, 0, "")
-	pdf.Ln(6)
+	pdf.SetFont("Times", "B", 12.5)
+	pdf.CellFormat(186, 5, "DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)", "", 1, "C", false, 0, "")
+	pdf.SetFont("Times", "B", 10.5)
+	pdf.CellFormat(186, 4.5, "UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR", "", 1, "C", false, 0, "")
+	pdf.CellFormat(186, 4.5, "PT ADYA ARTHA ABADI", "", 1, "C", false, 0, "")
+	pdf.Ln(5)
 
 	// Student Info Table
-	pdf.SetFont("Times", "", 10.5)
-	pdf.CellFormat(40, 5, "Nama Mahasiswa", "", 0, "L", false, 0, "")
-	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.SetFont("Times", "B", 10.5)
-	pdf.CellFormat(135, 5, fullName, "", 1, "L", false, 0, "")
-
-	pdf.SetFont("Times", "", 10.5)
-	pdf.CellFormat(40, 5, "NIM", "", 0, "L", false, 0, "")
-	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(135, 5, nim, "", 1, "L", false, 0, "")
-
-	pdf.CellFormat(40, 5, "Program Studi", "", 0, "L", false, 0, "")
-	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(135, 5, "Manajemen", "", 1, "L", false, 0, "")
-
-	pdf.CellFormat(40, 5, "Tempat PKL", "", 0, "L", false, 0, "")
-	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(135, 5, "PT Adya Artha Abadi", "", 1, "L", false, 0, "")
-
-	pdf.CellFormat(40, 5, "Periode PKL", "", 0, "L", false, 0, "")
-	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(135, 5, "15 Juni s.d. 31 Agustus 2026", "", 1, "L", false, 0, "")
-
-	pdf.Ln(4)
-	pdf.SetFont("Times", "B", 10.5)
-	pdf.CellFormat(180, 5, "BULAN: JUNI - AGUSTUS 2026", "", 1, "L", false, 0, "")
-	pdf.Ln(2)
-
-	// Single Column Continuous Table
-	colW := []float64{15, 35, 35, 95}
-
-	pdf.SetFillColor(240, 240, 240)
-	pdf.SetFont("Times", "B", 10)
-	pdf.CellFormat(colW[0], 6.5, "No", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[1], 6.5, "Tanggal", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[2], 6.5, "Hari", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[3], 6.5, "Hadir / Tidak Hadir", "1", 1, "C", true, 0, "")
+	pdf.SetFont("Times", "", 9.5)
+	pdf.CellFormat(32, 4.2, "Nama Mahasiswa", "", 0, "L", false, 0, "")
+	pdf.CellFormat(4, 4.2, ":", "", 0, "L", false, 0, "")
+	pdf.SetFont("Times", "B", 9.5)
+	pdf.CellFormat(150, 4.2, fullName, "", 1, "L", false, 0, "")
 
 	pdf.SetFont("Times", "", 9.5)
-	for _, item := range dateRange {
-		statusStr := getStatusStr(item, logMap, username)
+	pdf.CellFormat(32, 4.2, "NIM", "", 0, "L", false, 0, "")
+	pdf.CellFormat(4, 4.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 4.2, nim, "", 1, "L", false, 0, "")
 
-		if statusStr != "Hadir" {
-			pdf.SetFont("Times", "B", 9.5)
-		} else {
-			pdf.SetFont("Times", "", 9.5)
-		}
+	pdf.CellFormat(32, 4.2, "Program Studi", "", 0, "L", false, 0, "")
+	pdf.CellFormat(4, 4.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 4.2, "Manajemen", "", 1, "L", false, 0, "")
 
-		pdf.CellFormat(colW[0], 5.2, item.No, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[1], 5.2, item.Date, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[2], 5.2, item.Day, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[3], 5.2, statusStr, "1", 1, "C", false, 0, "")
+	pdf.CellFormat(32, 4.2, "Tempat PKL", "", 0, "L", false, 0, "")
+	pdf.CellFormat(4, 4.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 4.2, "PT Adya Artha Abadi", "", 1, "L", false, 0, "")
+
+	pdf.CellFormat(32, 4.2, "Periode PKL", "", 0, "L", false, 0, "")
+	pdf.CellFormat(4, 4.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 4.2, "15 Juni s.d. 31 Agustus 2026", "", 1, "L", false, 0, "")
+
+	pdf.Ln(4)
+
+	// Define 3 Monthly Matrix Blocks (Juni, Juli, Agustus 2026)
+	matrixList := []MonthMatrix{
+		{"JUNI 2026", 2026, time.June, 15, 30},
+		{"JULI 2026", 2026, time.July, 1, 31},
+		{"AGUSTUS 2026", 2026, time.August, 1, 31},
 	}
 
-	pdf.Ln(8)
+	dayAbbr := map[time.Weekday]string{
+		time.Sunday:    "Mg",
+		time.Monday:    "Sn",
+		time.Tuesday:   "Sl",
+		time.Wednesday: "Rb",
+		time.Thursday:  "Km",
+		time.Friday:    "Jm",
+		time.Saturday:  "Sb",
+	}
+
+	for _, m := range matrixList {
+		pdf.SetFont("Times", "B", 9.5)
+		pdf.CellFormat(186, 4.5, fmt.Sprintf("BULAN: %s", m.Title), "", 1, "L", false, 0, "")
+
+		totalDays := m.EndDay - m.StartDay + 1
+		lblWidth := 25.0
+		cellWidth := (186.0 - lblWidth) / float64(totalDays)
+
+		// Row 1: Tanggal Header
+		pdf.SetFillColor(235, 235, 235)
+		pdf.SetFont("Times", "B", 8)
+		pdf.CellFormat(lblWidth, 4.5, "Tanggal", "1", 0, "C", true, 0, "")
+
+		for day := m.StartDay; day <= m.EndDay; day++ {
+			pdf.CellFormat(cellWidth, 4.5, fmt.Sprintf("%d", day), "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1)
+
+		// Row 2: Hari Header
+		pdf.SetFillColor(245, 245, 245)
+		pdf.SetFont("Times", "", 7.5)
+		pdf.CellFormat(lblWidth, 4.2, "Hari", "1", 0, "C", true, 0, "")
+
+		for day := m.StartDay; day <= m.EndDay; day++ {
+			tDate := time.Date(m.Year, m.Month, day, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
+			abbr := dayAbbr[tDate.Weekday()]
+			if tDate.Weekday() == time.Sunday {
+				pdf.SetFont("Times", "B", 7.5)
+			} else {
+				pdf.SetFont("Times", "", 7.5)
+			}
+			pdf.CellFormat(cellWidth, 4.2, abbr, "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1)
+
+		// Row 3: Status Presensi Row
+		pdf.SetFont("Times", "B", 8)
+		pdf.CellFormat(lblWidth, 5.0, "Status Presensi", "1", 0, "C", false, 0, "")
+
+		for day := m.StartDay; day <= m.EndDay; day++ {
+			tDate := time.Date(m.Year, m.Month, day, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
+			dateStr := tDate.Format("02-01-2006")
+			dayName := GetDayNameIndonesian(tDate.Weekday())
+
+			code, rgb := getStatusCode(dateStr, dayName, logMap, username)
+
+			pdf.SetFillColor(rgb[0], rgb[1], rgb[2])
+			pdf.CellFormat(cellWidth, 5.0, code, "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1)
+		pdf.Ln(3)
+	}
+
+	// Legend Box
+	pdf.SetFont("Times", "I", 8.5)
+	pdf.CellFormat(186, 4, "Keterangan Kode Status:   [ H ] Hadir     [ S ] Sakit     [ I ] Izin     [ L ] Libur (Galungan / Kemerdekaan / Minggu)     [ TH ] Tidak Hadir", "", 1, "L", false, 0, "")
+
+	pdf.Ln(6)
 
 	// Signature Section (No "Mengetahui,")
 	ySig := pdf.GetY()
-	if ySig > 245 {
+	if ySig > 250 {
 		pdf.AddPage()
 		ySig = 20
 	}
 
-	pdf.SetFont("Times", "B", 10.5)
-	pdf.SetXY(15, ySig)
-	pdf.CellFormat(90, 5, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
-	pdf.SetXY(105, ySig)
-	pdf.SetFont("Times", "", 10.5)
-	pdf.CellFormat(90, 5, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
+	pdf.SetFont("Times", "B", 9.5)
+	pdf.SetXY(12, ySig)
+	pdf.CellFormat(90, 4.5, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
+	pdf.SetXY(108, ySig)
+	pdf.SetFont("Times", "", 9.5)
+	pdf.CellFormat(92, 4.5, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
 
-	pdf.SetXY(105, ySig+5)
-	pdf.CellFormat(90, 5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
+	pdf.SetXY(108, ySig+4.5)
+	pdf.CellFormat(92, 4.5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
 
-	pdf.SetXY(15, ySig+28)
-	pdf.SetFont("Times", "BU", 10.5)
-	pdf.CellFormat(90, 5, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
-	pdf.SetXY(105, ySig+28)
-	pdf.CellFormat(90, 5, fullName, "", 1, "C", false, 0, "")
+	pdf.SetXY(12, ySig+24)
+	pdf.SetFont("Times", "BU", 9.5)
+	pdf.CellFormat(90, 4.5, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
+	pdf.SetXY(108, ySig+24)
+	pdf.CellFormat(92, 4.5, fullName, "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
 	err = pdf.Output(&buf)
