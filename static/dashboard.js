@@ -194,25 +194,29 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Fast Immediate Network/Cell Positioning First (Zero Delay)
-    const optionsFast = { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 };
-    const optionsAccurate = { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 };
+    geoCoords.textContent = 'Menghubungkan lokasi HP...';
 
+    // 1. Instant Cache Fetch (1 Millisecond Response)
     navigator.geolocation.getCurrentPosition(
       onGeoSuccess,
       (err) => {
-        // Retry with high accuracy if fast positioning failed
-        navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError, optionsAccurate);
+        console.warn('Instant cache fetch missed, trying fast network positioning:', err);
+        // 2. Fast Network Positioning (3s Timeout)
+        navigator.geolocation.getCurrentPosition(
+          onGeoSuccess,
+          onGeoError,
+          { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 }
+        );
       },
-      optionsFast
+      { enableHighAccuracy: false, timeout: 2000, maximumAge: Infinity }
     );
 
-    // Continuous Realtime Updates
+    // 3. Background Realtime Watcher
     if (geoWatchId === null) {
       geoWatchId = navigator.geolocation.watchPosition(
         onGeoSuccess,
         () => {},
-        { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 }
       );
     }
   }
