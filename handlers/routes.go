@@ -11,6 +11,7 @@ import (
 	"me.absen/app/db"
 	"me.absen/app/models"
 	"me.absen/app/services"
+	"me.absen/app/static"
 )
 
 type ServerHandler struct {
@@ -59,7 +60,14 @@ func (h *ServerHandler) LoginPageHandler(w http.ResponseWriter, r *http.Request)
 		http.Redirect(w, r, "/dashboard", http.StatusFound)
 		return
 	}
-	http.ServeFile(w, r, "./static/login.html")
+
+	content, err := static.Files.ReadFile("login.html")
+	if err != nil {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(content)
 }
 
 func (h *ServerHandler) DashboardPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +76,14 @@ func (h *ServerHandler) DashboardPageHandler(w http.ResponseWriter, r *http.Requ
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	http.ServeFile(w, r, "./static/dashboard.html")
+
+	content, err := static.Files.ReadFile("dashboard.html")
+	if err != nil {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(content)
 }
 
 // API Routes

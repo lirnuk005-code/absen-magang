@@ -8,6 +8,7 @@ import (
 
 	"me.absen/app/db"
 	"me.absen/app/handlers"
+	"me.absen/app/static"
 )
 
 func main() {
@@ -39,8 +40,8 @@ func main() {
 	mux.HandleFunc("/api/logs", handler.LogsHandler)
 	mux.HandleFunc("/api/logout", handler.LogoutHandler)
 
-	// Serve Static CSS/JS Assets
-	fs := http.FileServer(http.Dir("./static"))
+	// Serve Static Embedded CSS/JS Assets
+	fs := http.FileServer(http.FS(static.Files))
 	mux.Handle("/style.css", fs)
 	mux.Handle("/login.js", fs)
 	mux.Handle("/dashboard.js", fs)

@@ -191,7 +191,7 @@ func main() {
 
 	fmt.Printf("Total logs generated: %d\n", len(allLogs))
 
-	// 4. Insert one-by-one or small chunks (20 logs per batch) with error logging
+	// 4. Insert in batches of 25
 	batchSize := 25
 	for i := 0; i < len(allLogs); i += batchSize {
 		endIdx := i + batchSize
@@ -219,7 +219,7 @@ func main() {
 			}
 			r.Body.Close()
 		}
-		time.Sleep(100 * time.Millisecond) // slight delay to ensure clean DB commits
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	fmt.Println("Complete! All attendance records from 15 June 2026 to 24 July 2026 seeded cleanly.")
