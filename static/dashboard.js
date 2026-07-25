@@ -364,14 +364,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const json = await res.json();
 
       if (json.success && Array.isArray(json.data)) {
-        if (json.data.length === 0) {
-          logsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada riwayat presensi</td></tr>';
+        // Filter ONLY valid attendance records (ignore rejected tipsen attempts)
+        const validLogs = json.data.filter(log => log.status && !log.status.startsWith('DITOLAK'));
+
+        if (validLogs.length === 0) {
+          logsTableBody.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada riwayat presensi valid</td></tr>';
           return;
         }
 
         // Group logs by Date (Asia/Makassar)
         const grouped = {};
-        json.data.forEach(log => {
+        validLogs.forEach(log => {
           const dateObj = new Date(log.check_in_time);
           const dateKey = dateObj.toLocaleDateString('sv-SE', { timeZone: 'Asia/Makassar' }); // YYYY-MM-DD
           if (!grouped[dateKey]) {
