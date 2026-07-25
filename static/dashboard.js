@@ -534,27 +534,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentName = currentUser.full_name || currentUser.username;
     const studentNIM = currentUser.nim || '-';
 
-    // Base date range 15 Juni 2026 to 30 Juni 2026 (Format Resmi Template DOCX PKL)
     const dateRange = [
-      { no: 1, date: '15-06-2026', day: 'Senin' },
-      { no: 2, date: '16-06-2026', day: 'Selasa' },
-      { no: 3, date: '17-06-2026', day: 'Rabu' },
-      { no: 4, date: '18-06-2026', day: 'Kamis' },
-      { no: 5, date: '19-06-2026', day: 'Jumat' },
-      { no: 6, date: '20-06-2026', day: 'Sabtu' },
-      { no: 7, date: '21-06-2026', day: 'Minggu' },
-      { no: 8, date: '22-06-2026', day: 'Senin' },
-      { no: 9, date: '23-06-2026', day: 'Selasa' },
-      { no: 10, date: '24-06-2026', day: 'Rabu' },
-      { no: 11, date: '25-06-2026', day: 'Kamis' },
-      { no: 12, date: '26-06-2026', day: 'Jumat' },
-      { no: 13, date: '27-06-2026', day: 'Sabtu' },
-      { no: 14, date: '28-06-2026', day: 'Minggu' },
-      { no: 15, date: '29-06-2026', day: 'Senin' },
-      { no: 16, date: '30-06-2026', day: 'Selasa' }
+      { no: '1', date: '15-06-2026', day: 'Senin' },
+      { no: '2', date: '16-06-2026', day: 'Selasa' },
+      { no: '3', date: '17-06-2026', day: 'Rabu' },
+      { no: '4', date: '18-06-2026', day: 'Kamis' },
+      { no: '5', date: '19-06-2026', day: 'Jumat' },
+      { no: '6', date: '20-06-2026', day: 'Sabtu' },
+      { no: '7', date: '21-06-2026', day: 'Minggu' },
+      { no: '8', date: '22-06-2026', day: 'Senin' },
+      { no: '9', date: '23-06-2026', day: 'Selasa' },
+      { no: '10', date: '24-06-2026', day: 'Rabu' },
+      { no: '11', date: '25-06-2026', day: 'Kamis' },
+      { no: '12', date: '26-06-2026', day: 'Jumat' },
+      { no: '13', date: '27-06-2026', day: 'Sabtu' },
+      { no: '14', date: '28-06-2026', day: 'Minggu' },
+      { no: '15', date: '29-06-2026', day: 'Senin' },
+      { no: '16', date: '30-06-2026', day: 'Selasa' }
     ];
 
-    // Build map from attendance logs
     const logMap = {};
     if (window.allAttendanceLogs && Array.isArray(window.allAttendanceLogs)) {
       window.allAttendanceLogs.forEach(log => {
@@ -568,11 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    let rowsHtml = '';
-    dateRange.forEach(item => {
+    const tableRows = dateRange.map(item => {
       let statusStr = 'Hadir';
-
-      // Special holiday rules matching schedule
       if (item.date === '16-06-2026' || item.date === '17-06-2026') {
         statusStr = 'Libur Hari Raya Galungan';
       } else if (item.day === 'Minggu') {
@@ -580,117 +575,204 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const log = logMap[item.date];
         if (log) {
-          if (log.type === 'SAKIT' || log.status === 'SAKIT') {
-            statusStr = 'Sakit';
-          } else if (log.type === 'IZIN') {
-            statusStr = 'Izin';
-          } else {
-            statusStr = 'Hadir';
-          }
+          if (log.type === 'SAKIT' || log.status === 'SAKIT') statusStr = 'Sakit';
+          else if (log.type === 'IZIN') statusStr = 'Izin';
+          else statusStr = 'Hadir';
         } else {
-          // Check specific user sickness records from instructions
-          if (currentUser.username === 'deksa' && item.date === '04-07-2026') {
-            statusStr = 'Sakit';
-          } else if (currentUser.username === 'putra' && item.date === '14-07-2026') {
-            statusStr = 'Sakit';
-          } else {
-            statusStr = 'Hadir';
-          }
+          if (currentUser.username === 'deksa' && item.date === '04-07-2026') statusStr = 'Sakit';
+          else if (currentUser.username === 'putra' && item.date === '14-07-2026') statusStr = 'Sakit';
+          else statusStr = 'Hadir';
         }
       }
-
-      rowsHtml += `
-        <tr>
-          <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.no}</td>
-          <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.date}</td>
-          <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.day}</td>
-          <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: ${statusStr === 'Hadir' ? 'normal' : 'bold'};">${statusStr}</td>
-        </tr>
-      `;
+      return [item.no, item.date, item.day, statusStr];
     });
 
-    const exportContainer = document.createElement('div');
-    exportContainer.style.position = 'fixed';
-    exportContainer.style.top = '0';
-    exportContainer.style.left = '0';
-    exportContainer.style.width = '750px';
-    exportContainer.style.zIndex = '-99999';
-    exportContainer.style.visibility = 'visible';
-    exportContainer.style.fontFamily = "'Times New Roman', Times, serif";
-    exportContainer.style.color = '#000000';
-    exportContainer.style.background = '#ffffff';
-    exportContainer.style.padding = '30px 40px';
-    exportContainer.style.boxSizing = 'border-box';
-
-    exportContainer.innerHTML = `
-      <div style="text-align: center; line-height: 1.3; margin-bottom: 20px; color: #000;">
-        <div style="font-size: 14pt; font-weight: bold;">DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)</div>
-        <div style="font-size: 12pt; font-weight: bold;">UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR</div>
-        <div style="font-size: 12pt; font-weight: bold;">PT ADYA ARTHA ABADI</div>
-      </div>
-
-      <table style="width: 100%; font-size: 11pt; border: none; margin-bottom: 15px; border-collapse: collapse; color: #000;">
-        <tr><td style="width: 160px; padding: 3px 0;">Nama Mahasiswa</td><td style="width: 15px;">:</td><td><b>${studentName}</b></td></tr>
-        <tr><td style="padding: 3px 0;">NIM</td><td>:</td><td>${studentNIM}</td></tr>
-        <tr><td style="padding: 3px 0;">Program Studi</td><td>:</td><td>Manajemen</td></tr>
-        <tr><td style="padding: 3px 0;">Tempat PKL</td><td>:</td><td>PT Adya Artha Abadi</td></tr>
-        <tr><td style="padding: 3px 0;">Periode PKL</td><td>:</td><td>15 s.d. 30 Juni 2026</td></tr>
-      </table>
-
-      <div style="font-size: 11pt; font-weight: bold; margin-bottom: 8px; color: #000;">BULAN: JUNI 2026</div>
-
-      <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 25px; color: #000;">
-        <thead>
-          <tr style="background-color: #f2f2f2; color: #000;">
-            <th style="border: 1px solid #000; padding: 6px; width: 40px; text-align: center;">No</th>
-            <th style="border: 1px solid #000; padding: 6px; width: 110px; text-align: center;">Tanggal</th>
-            <th style="border: 1px solid #000; padding: 6px; width: 100px; text-align: center;">Hari</th>
-            <th style="border: 1px solid #000; padding: 6px; text-align: center;">Hadir / Tidak Hadir</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
-
-      <table style="width: 100%; border: none; font-size: 11pt; margin-top: 25px; color: #000;">
-        <tr>
-          <td style="width: 50%; text-align: center; vertical-align: top;">
-            Mengetahui,<br>
-            <b>Kepala Cabang PT. Adya Artha Abadi Bali</b><br><br><br><br><br>
-            <b><u>I Made Mas Sugianyar</u></b>
-          </td>
-          <td style="width: 50%; text-align: center; vertical-align: top;">
-            <b>Denpasar, ${todayFormatted}</b><br>
-            Mahasiswa PKL,<br><br><br><br><br>
-            <b><u>${studentName}</u></b>
-          </td>
-        </tr>
-      </table>
-    `;
-
-    document.body.appendChild(exportContainer);
-
-    const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     `Absensi_PKL_Juni2026_${currentUser.username}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    if (window.html2pdf) {
-      window.html2pdf().set(opt).from(exportContainer).save().then(() => {
-        document.body.removeChild(exportContainer);
-      }).catch(err => {
-        console.error('Export PDF error:', err);
-        document.body.removeChild(exportContainer);
-        alert('Gagal membuat file PDF. Silakan coba lagi.');
-      });
-    } else {
-      document.body.removeChild(exportContainer);
-      window.print();
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+      openPrintWindow(studentName, studentNIM, todayFormatted, tableRows);
+      return;
     }
+
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      // Header Text
+      doc.setFont('times', 'bold');
+      doc.setFontSize(13);
+      doc.text('DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)', 105, 18, { align: 'center' });
+      doc.setFontSize(11);
+      doc.text('UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR', 105, 24, { align: 'center' });
+      doc.text('PT ADYA ARTHA ABADI', 105, 30, { align: 'center' });
+
+      // Student Meta
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10.5);
+      let startY = 38;
+      const leftM = 14;
+
+      doc.text('Nama Mahasiswa', leftM, startY);
+      doc.text(':', leftM + 35, startY);
+      doc.setFont('times', 'bold');
+      doc.text(studentName, leftM + 40, startY);
+
+      startY += 5;
+      doc.setFont('times', 'normal');
+      doc.text('NIM', leftM, startY);
+      doc.text(':', leftM + 35, startY);
+      doc.text(studentNIM, leftM + 40, startY);
+
+      startY += 5;
+      doc.text('Program Studi', leftM, startY);
+      doc.text(':', leftM + 35, startY);
+      doc.text('Manajemen', leftM + 40, startY);
+
+      startY += 5;
+      doc.text('Tempat PKL', leftM, startY);
+      doc.text(':', leftM + 35, startY);
+      doc.text('PT Adya Artha Abadi', leftM + 40, startY);
+
+      startY += 5;
+      doc.text('Periode PKL', leftM, startY);
+      doc.text(':', leftM + 35, startY);
+      doc.text('15 s.d. 30 Juni 2026', leftM + 40, startY);
+
+      startY += 8;
+      doc.setFont('times', 'bold');
+      doc.text('BULAN: JUNI 2026', leftM, startY);
+
+      // AutoTable Generation
+      doc.autoTable({
+        startY: startY + 3,
+        head: [['No', 'Tanggal', 'Hari', 'Hadir / Tidak Hadir']],
+        body: tableRows,
+        theme: 'grid',
+        styles: { font: 'times', fontSize: 9.5, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2, halign: 'center', cellPadding: 2 },
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+        columnStyles: { 0: { cellWidth: 15 }, 1: { cellWidth: 35 }, 2: { cellWidth: 35 }, 3: { cellWidth: 'auto' } },
+        margin: { left: leftM, right: leftM }
+      });
+
+      const finalY = doc.lastAutoTable.finalY + 12;
+
+      // Signatures
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10.5);
+
+      doc.text('Mengetahui,', 55, finalY, { align: 'center' });
+      doc.setFont('times', 'bold');
+      doc.text('Kepala Cabang PT. Adya Artha Abadi Bali', 55, finalY + 5, { align: 'center' });
+      doc.text('I Made Mas Sugianyar', 55, finalY + 28, { align: 'center' });
+      doc.line(25, finalY + 29, 85, finalY + 29);
+
+      doc.setFont('times', 'normal');
+      doc.text(`Denpasar, ${todayFormatted}`, 155, finalY, { align: 'center' });
+      doc.text('Mahasiswa PKL,', 155, finalY + 5, { align: 'center' });
+      doc.setFont('times', 'bold');
+      doc.text(studentName, 155, finalY + 28, { align: 'center' });
+      doc.line(125, finalY + 29, 185, finalY + 29);
+
+      doc.save(`Absensi_PKL_Juni2026_${currentUser.username}.pdf`);
+    } catch (err) {
+      console.error('jsPDF generation failed, using print window fallback:', err);
+      openPrintWindow(studentName, studentNIM, todayFormatted, tableRows);
+    }
+  }
+
+  function openPrintWindow(studentName, studentNIM, todayFormatted, tableRows) {
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      alert('Izinkan pop-up browser untuk mengeksport dokumen.');
+      return;
+    }
+
+    let rowsHtml = tableRows.map(r => `
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${r[0]}</td>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${r[1]}</td>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${r[2]}</td>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${r[3]}</td>
+      </tr>
+    `).join('');
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Absensi_PKL_Juni2026_${currentUser.username}</title>
+        <style>
+          body { font-family: 'Times New Roman', serif; color: #000; background: #fff; margin: 0; padding: 25px 35px; }
+          .header { text-align: center; line-height: 1.3; margin-bottom: 20px; }
+          .title-1 { font-size: 14pt; font-weight: bold; }
+          .title-2 { font-size: 12pt; font-weight: bold; }
+          .info-table { width: 100%; font-size: 11pt; margin-bottom: 15px; border-collapse: collapse; }
+          .info-table td { border: none; padding: 3px 0; }
+          .month-label { font-size: 11pt; font-weight: bold; margin-bottom: 8px; }
+          .data-tbl { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 25px; }
+          .data-tbl th, .data-tbl td { border: 1px solid #000; padding: 6px; text-align: center; }
+          .data-tbl th { background-color: #f2f2f2; }
+          .sig-table { width: 100%; border: none; font-size: 11pt; margin-top: 30px; }
+          .sig-table td { border: none; text-align: center; vertical-align: top; }
+          @media print {
+            body { padding: 0; }
+            @page { size: A4 portrait; margin: 15mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title-1">DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)</div>
+          <div class="title-2">UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR</div>
+          <div class="title-2">PT ADYA ARTHA ABADI</div>
+        </div>
+
+        <table class="info-table">
+          <tr><td style="width: 160px;">Nama Mahasiswa</td><td style="width: 15px;">:</td><td><b>${studentName}</b></td></tr>
+          <tr><td>NIM</td><td>:</td><td>${studentNIM}</td></tr>
+          <tr><td>Program Studi</td><td>:</td><td>Manajemen</td></tr>
+          <tr><td>Tempat PKL</td><td>:</td><td>PT Adya Artha Abadi</td></tr>
+          <tr><td>Periode PKL</td><td>:</td><td>15 s.d. 30 Juni 2026</td></tr>
+        </table>
+
+        <div class="month-label">BULAN: JUNI 2026</div>
+
+        <table class="data-tbl">
+          <thead>
+            <tr>
+              <th style="width: 40px;">No</th>
+              <th style="width: 110px;">Tanggal</th>
+              <th style="width: 100px;">Hari</th>
+              <th>Hadir / Tidak Hadir</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <table class="sig-table">
+          <tr>
+            <td style="width: 50%;">
+              Mengetahui,<br>
+              <b>Kepala Cabang PT. Adya Artha Abadi Bali</b><br><br><br><br><br>
+              <b><u>I Made Mas Sugianyar</u></b>
+            </td>
+            <td style="width: 50%;">
+              <b>Denpasar, ${todayFormatted}</b><br>
+              Mahasiswa PKL,<br><br><br><br><br>
+              <b><u>${studentName}</u></b>
+            </td>
+          </tr>
+        </table>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
   }
 
   // 9. Logout
