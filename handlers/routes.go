@@ -184,8 +184,16 @@ func (h *ServerHandler) RegisterIPHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	var reqBody models.RegisterIPRequest
+	json.NewDecoder(r.Body).Decode(&reqBody)
+
 	clientIP := ExtractClientIP(r)
-	err = h.Store.RegisterIP(cookie.Value, clientIP)
+	regVal := clientIP
+	if reqBody.DeviceUUID != "" {
+		regVal = fmt.Sprintf("DEV:%s|IP:%s", reqBody.DeviceUUID, clientIP)
+	}
+
+	err = h.Store.RegisterIP(cookie.Value, regVal)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(models.Response{Success: false, Message: err.Error()})
@@ -194,9 +202,9 @@ func (h *ServerHandler) RegisterIPHandler(w http.ResponseWriter, r *http.Request
 
 	json.NewEncoder(w).Encode(models.Response{
 		Success: true,
-		Message: fmt.Sprintf("IP %s Berhasil Didaftarkan Secara Permanen!", clientIP),
+		Message: "Perangkat HP & IP Berhasil Didaftarkan Secara Permanen!",
 		Data: M{
-			"registered_ip": clientIP,
+			"registered_ip": regVal,
 		},
 	})
 }
@@ -259,17 +267,47 @@ func (h *ServerHandler) AbsenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Check IP Registration (Anti-Tipsen)
+	// 2. Check Device UUID / IP Registration (Anti-Tipsen)
 	if user.RegisteredIP == "" {
 		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(models.Response{
 			Success: false,
-			Message: "Anda belum mendaftarkan IP Perangkat! Silakan klik 'Daftarkan IP Saya' terlebih dahulu.",
+			Message: "Anda belum mendaftarkan Perangkat HP! Silakan klik 'Daftarkan Perangkat Saya' terlebih dahulu.",
 		})
 		return
 	}
 
-	if user.RegisteredIP != clientIP {
+	// Device UUID or IP check
+	if strings.Contains(user.RegisteredIP, "DEV:") {
+		devStart := strings.Index(user.RegisteredIP, "DEV:") + 4
+		devSub := user.RegisteredIP[devStart:]
+		devEnd := strings.Index(devSub, "|")
+		registeredDevUUID := devSub
+		if devEnd != -1 {
+			registeredDevUUID = devSub[:devEnd]
+		}
+
+		if req.DeviceUUID != "" && req.DeviceUUID != registeredDevUUID {
+			h.Store.SaveAttendanceLog(&models.AttendanceLog{
+				Username:       user.Username,
+				CheckInTime:    now,
+				Type:           req.Type,
+				Latitude:       req.Latitude,
+				Longitude:      req.Longitude,
+				DistanceMeters: services.CalculateDistance(req.Latitude, req.Longitude, services.TargetLat, services.TargetLng),
+				IPAddress:      clientIP,
+				Status:         "DITOLAK_DEVICE_TIPSEN",
+				Notes:          fmt.Sprintf("Percobaan Titip Absen %s! Perangkat Request (%s) != Perangkat Terdaftar (%s)", req.Type, req.DeviceUUID, registeredDevUUID),
+			})
+
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(models.Response{
+				Success: false,
+				Message: fmt.Sprintf("⚠️ Percobaan Titip Absen Terdeteksi! Perangkat HP/Browser ini tidak cocok dengan Perangkat Terdaftar akun %s.", user.Username),
+			})
+			return
+		}
+	} else if user.RegisteredIP != clientIP {
 		h.Store.SaveAttendanceLog(&models.AttendanceLog{
 			Username:       user.Username,
 			CheckInTime:    now,

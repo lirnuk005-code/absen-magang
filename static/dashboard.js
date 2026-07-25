@@ -261,6 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Device UUID Manager (Kunci Perangkat HP Fisik)
+  function getOrCreateDeviceUUID() {
+    let devId = localStorage.getItem('absen_device_uuid');
+    if (!devId) {
+      devId = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+      localStorage.setItem('absen_device_uuid', devId);
+    }
+    return devId;
+  }
+
   // 5. Load User Profile
   async function fetchUserData() {
     try {
@@ -276,11 +286,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (regIpText) regIpText.textContent = currentUser.registered_ip;
           if (ipStatusBadge) {
             ipStatusBadge.className = 'badge badge-success';
-            ipStatusBadge.textContent = '1 IP Terdaftar (Terkunci)';
+            ipStatusBadge.textContent = currentUser.registered_ip.includes('DEV:') ? '🔒 HP Terkunci (1 Device)' : '1 IP Terdaftar';
           }
           if (ipRegisterBanner) ipRegisterBanner.style.display = 'none';
         } else {
-          if (regIpText) regIpText.textContent = 'Belum Terdaftar (Max 1 IP)';
+          if (regIpText) regIpText.textContent = 'Belum Terdaftar (Kunci 1 HP)';
           if (ipStatusBadge) {
             ipStatusBadge.className = 'badge badge-danger';
             ipStatusBadge.textContent = 'Belum Terdaftar';
@@ -299,24 +309,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 6. Register IP
-  btnRegisterIp.addEventListener('click', async () => {
-    if (!confirm('Daftarkan IP Anda saat ini secara permanen ke akun ini?')) return;
+  // 6. Register Device / IP
+  if (btnRegisterIp) {
+    btnRegisterIp.addEventListener('click', async () => {
+      if (!confirm('Daftarkan & kunci perangkat HP ini secara permanen ke akun Anda?')) return;
 
-    try {
-      const res = await fetch('/api/register-ip', { method: 'POST' });
-      const json = await res.json();
+      try {
+        const res = await fetch('/api/register-ip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_uuid: getOrCreateDeviceUUID() })
+        });
+        const json = await res.json();
 
-      if (json.success) {
-        alert(json.message);
-        fetchUserData();
-      } else {
-        alert('Gagal registrasi IP: ' + json.message);
+        if (json.success) {
+          alert(json.message);
+          fetchUserData();
+        } else {
+          alert('Gagal registrasi perangkat: ' + json.message);
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan jaringan!');
       }
-    } catch (err) {
-      alert('Terjadi kesalahan jaringan!');
-    }
-  });
+    });
+  }
 
   // 7. Submit Absen (DATANG / PULANG / SAKIT)
   btnAbsen.addEventListener('click', async () => {
@@ -346,7 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
           type: selectedType,
           latitude: lat,
           longitude: lng,
-          early_reason: earlyReason
+          early_reason: earlyReason,
+          device_uuid: getOrCreateDeviceUUID()
         })
       });
       const json = await res.json();

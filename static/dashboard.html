@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
   <div class="background-globes">
@@ -73,15 +73,15 @@
         </div>
       </div>
 
-      <!-- IP Anti-Tipsen Card -->
+      <!-- Device Lock Card -->
       <div class="glass-card info-card">
         <div class="card-header">
-          <span class="card-title"><i class="fa-solid fa-network-wired"></i> Alamat IP Terdaftar</span>
+          <span class="card-title"><i class="fa-solid fa-mobile-screen-button"></i> Status Kunci Perangkat HP</span>
           <span id="ip-status-badge" class="badge badge-warning">Belum Terdaftar</span>
         </div>
         <div class="ip-display" id="client-ip">Loading...</div>
         <div class="card-footer" id="registered-ip-footer">
-          IP Terdaftar: <b id="registered-ip-val">Belum Ada</b>
+          Perangkat Terkunci: <b id="registered-ip-val">Belum Ada</b>
         </div>
       </div>
     </div>
@@ -97,12 +97,12 @@
           <div class="banner-content">
             <i class="fa-solid fa-shield-halved banner-icon"></i>
             <div>
-              <h4>Daftarkan IP Perangkat Ini (Strict 1 IP)</h4>
-              <p>Akun ini belum memiliki IP terdaftar. Daftarkan IP saat ini agar dapat melakukan presensi.</p>
+              <h4>Kunci Perangkat HP Ini (Strict 1 Perangkat)</h4>
+              <p>Akun ini belum memiliki HP terdaftar. Daftarkan & kunci HP saat ini agar terikat pada akun Anda untuk mencegah titip absen.</p>
             </div>
           </div>
           <button id="btn-register-ip" class="btn btn-warning">
-            <i class="fa-solid fa-key"></i> Daftarkan IP Saya
+            <i class="fa-solid fa-mobile-screen-button"></i> Kunci HP Perangkat Saya
           </button>
         </div>
 
@@ -169,6 +169,6 @@
     </div>
   </main>
 
-  <script src="dashboard.js?v=8"></script>
+  <script src="dashboard.js?v=9"></script>
 </body>
 </html>

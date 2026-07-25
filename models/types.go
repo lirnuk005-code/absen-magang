@@ -31,6 +31,12 @@ type AbsenRequest struct {
 	Latitude    float64 `json:"latitude"`
 	Longitude   float64 `json:"longitude"`
 	EarlyReason string  `json:"early_reason,omitempty"`
+	DeviceUUID  string  `json:"device_uuid,omitempty"`
+}
+
+// RegisterIPRequest payload
+type RegisterIPRequest struct {
+	DeviceUUID string `json:"device_uuid,omitempty"`
 }
 
 // LoginRequest payload
