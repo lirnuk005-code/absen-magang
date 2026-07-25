@@ -95,7 +95,7 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	}
 
 	pdf := fpdf.New("P", "mm", "A4", "")
-	pdf.SetMargins(8, 8, 8)
+	pdf.SetMargins(12, 6, 12)
 	pdf.SetAutoPageBreak(false, 0)
 	pdf.AddPage()
 
@@ -103,131 +103,90 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	undiknasBytes, err := static.Files.ReadFile("logo_undiknas.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_undiknas", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(undiknasBytes))
-		pdf.ImageOptions("logo_undiknas", 8, 6, 16, 16, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_undiknas", 12, 5, 15, 15, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
 	companyBytes, err := static.Files.ReadFile("logo_company.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_company", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(companyBytes))
-		pdf.ImageOptions("logo_company", 183, 7, 19, 13, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_company", 180, 6, 18, 12, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
 	// Header Title
-	pdf.SetFont("Times", "B", 12)
-	pdf.CellFormat(194, 4.5, "DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)", "", 1, "C", false, 0, "")
-	pdf.SetFont("Times", "B", 10)
-	pdf.CellFormat(194, 4.0, "UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR", "", 1, "C", false, 0, "")
-	pdf.CellFormat(194, 4.0, "PT ADYA ARTHA ABADI", "", 1, "C", false, 0, "")
-	pdf.Ln(3)
+	pdf.SetFont("Times", "B", 11)
+	pdf.CellFormat(186, 3.8, "DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)", "", 1, "C", false, 0, "")
+	pdf.SetFont("Times", "B", 9.5)
+	pdf.CellFormat(186, 3.5, "UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR", "", 1, "C", false, 0, "")
+	pdf.CellFormat(186, 3.5, "PT ADYA ARTHA ABADI", "", 1, "C", false, 0, "")
+	pdf.Ln(2)
 
-	// Student Info Block (Compact 2-Column Metadata)
-	pdf.SetFont("Times", "", 9)
-	pdf.CellFormat(28, 3.8, "Nama Mahasiswa", "", 0, "L", false, 0, "")
-	pdf.CellFormat(3, 3.8, ":", "", 0, "L", false, 0, "")
-	pdf.SetFont("Times", "B", 9)
-	pdf.CellFormat(65, 3.8, fullName, "", 0, "L", false, 0, "")
-
-	pdf.SetFont("Times", "", 9)
-	pdf.CellFormat(25, 3.8, "Tempat PKL", "", 0, "L", false, 0, "")
-	pdf.CellFormat(3, 3.8, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(70, 3.8, "PT Adya Artha Abadi", "", 1, "L", false, 0, "")
-
-	pdf.CellFormat(28, 3.8, "NIM / Prodi", "", 0, "L", false, 0, "")
-	pdf.CellFormat(3, 3.8, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(65, 3.8, fmt.Sprintf("%s / Manajemen", nim), "", 0, "L", false, 0, "")
-
-	pdf.CellFormat(25, 3.8, "Periode PKL", "", 0, "L", false, 0, "")
-	pdf.CellFormat(3, 3.8, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(70, 3.8, "15 Juni s.d. 31 Agustus 2026", "", 1, "L", false, 0, "")
-
-	pdf.Ln(3)
-
-	// Side-by-Side Split Table (78 Days total: 39 rows left, 39 rows right)
-	half := (len(dateRange) + 1) / 2
-	leftRows := dateRange[:half]
-	rightRows := dateRange[half:]
-
-	colW := []float64{8, 22, 18, 46}
-	gapW := 6.0
-
-	// Table Header
-	pdf.SetFillColor(240, 240, 240)
+	// Student Info Table (Compact 2-Column Row)
+	pdf.SetFont("Times", "", 8.5)
+	pdf.CellFormat(28, 3.2, "Nama Mahasiswa", "", 0, "L", false, 0, "")
+	pdf.CellFormat(3, 3.2, ":", "", 0, "L", false, 0, "")
 	pdf.SetFont("Times", "B", 8.5)
+	pdf.CellFormat(60, 3.2, fullName, "", 0, "L", false, 0, "")
 
-	// Left Header
-	pdf.CellFormat(colW[0], 5.0, "No", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[1], 5.0, "Tanggal", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[2], 5.0, "Hari", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[3], 5.0, "Hadir / Tidak Hadir", "1", 0, "C", true, 0, "")
+	pdf.SetFont("Times", "", 8.5)
+	pdf.CellFormat(25, 3.2, "Tempat PKL", "", 0, "L", false, 0, "")
+	pdf.CellFormat(3, 3.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(67, 3.2, "PT Adya Artha Abadi", "", 1, "L", false, 0, "")
 
-	pdf.CellFormat(gapW, 5.0, "", "", 0, "C", false, 0, "")
+	pdf.CellFormat(28, 3.2, "NIM / Prodi", "", 0, "L", false, 0, "")
+	pdf.CellFormat(3, 3.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(60, 3.2, fmt.Sprintf("%s / Manajemen", nim), "", 0, "L", false, 0, "")
 
-	// Right Header
-	pdf.CellFormat(colW[0], 5.0, "No", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[1], 5.0, "Tanggal", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[2], 5.0, "Hari", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[3], 5.0, "Hadir / Tidak Hadir", "1", 1, "C", true, 0, "")
+	pdf.CellFormat(25, 3.2, "Periode PKL", "", 0, "L", false, 0, "")
+	pdf.CellFormat(3, 3.2, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(67, 3.2, "15 Juni s.d. 31 Agustus 2026", "", 1, "L", false, 0, "")
 
-	// Table Body Rows (Height 4.0mm per row, fits 39 rows perfectly on 1 A4 Page)
-	pdf.SetFont("Times", "", 8)
-	for i := 0; i < half; i++ {
-		itemL := leftRows[i]
-		statusL := getFullStatusStr(itemL, logMap, username)
+	pdf.Ln(2)
 
-		if statusL != "Hadir" {
-			pdf.SetFont("Times", "B", 8)
+	// 1 Single Continuous Table across all 78 Days
+	colW := []float64{12, 32, 32, 110}
+
+	pdf.SetFillColor(240, 240, 240)
+	pdf.SetFont("Times", "B", 8)
+	pdf.CellFormat(colW[0], 3.8, "No", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[1], 3.8, "Tanggal", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[2], 3.8, "Hari", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[3], 3.8, "Hadir / Tidak Hadir", "1", 1, "C", true, 0, "")
+
+	pdf.SetFont("Times", "", 7.5)
+	for _, item := range dateRange {
+		statusStr := getFullStatusStr(item, logMap, username)
+
+		if statusStr != "Hadir" {
+			pdf.SetFont("Times", "B", 7.5)
 		} else {
-			pdf.SetFont("Times", "", 8)
+			pdf.SetFont("Times", "", 7.5)
 		}
 
-		pdf.CellFormat(colW[0], 4.0, itemL.No, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[1], 4.0, itemL.Date, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[2], 4.0, itemL.Day, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colW[3], 4.0, statusL, "1", 0, "C", false, 0, "")
-
-		pdf.CellFormat(gapW, 4.0, "", "", 0, "C", false, 0, "")
-
-		if i < len(rightRows) {
-			itemR := rightRows[i]
-			statusR := getFullStatusStr(itemR, logMap, username)
-
-			if statusR != "Hadir" {
-				pdf.SetFont("Times", "B", 8)
-			} else {
-				pdf.SetFont("Times", "", 8)
-			}
-
-			pdf.CellFormat(colW[0], 4.0, itemR.No, "1", 0, "C", false, 0, "")
-			pdf.CellFormat(colW[1], 4.0, itemR.Date, "1", 0, "C", false, 0, "")
-			pdf.CellFormat(colW[2], 4.0, itemR.Day, "1", 0, "C", false, 0, "")
-			pdf.CellFormat(colW[3], 4.0, statusR, "1", 1, "C", false, 0, "")
-		} else {
-			pdf.CellFormat(colW[0], 4.0, "", "1", 0, "C", false, 0, "")
-			pdf.CellFormat(colW[1], 4.0, "", "1", 0, "C", false, 0, "")
-			pdf.CellFormat(colW[2], 4.0, "", "1", 0, "C", false, 0, "")
-			pdf.CellFormat(colW[3], 4.0, "", "1", 1, "C", false, 0, "")
-		}
+		pdf.CellFormat(colW[0], 2.85, item.No, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colW[1], 2.85, item.Date, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colW[2], 2.85, item.Day, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colW[3], 2.85, statusStr, "1", 1, "C", false, 0, "")
 	}
 
-	pdf.Ln(5)
+	pdf.Ln(3)
 
-	// Signature Section (Guaranteed 100% on Page 1)
+	// Signature Section
 	ySig := pdf.GetY()
-	pdf.SetFont("Times", "B", 9)
-	pdf.SetXY(8, ySig)
-	pdf.CellFormat(94, 4.0, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
+	pdf.SetFont("Times", "B", 8.5)
+	pdf.SetXY(12, ySig)
+	pdf.CellFormat(90, 3.5, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
 	pdf.SetXY(108, ySig)
-	pdf.SetFont("Times", "", 9)
-	pdf.CellFormat(94, 4.0, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
+	pdf.SetFont("Times", "", 8.5)
+	pdf.CellFormat(90, 3.5, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
 
-	pdf.SetXY(108, ySig+4.0)
-	pdf.CellFormat(94, 4.0, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
+	pdf.SetXY(108, ySig+3.5)
+	pdf.CellFormat(90, 3.5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
 
-	pdf.SetXY(8, ySig+20)
-	pdf.SetFont("Times", "BU", 9)
-	pdf.CellFormat(94, 4.0, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
-	pdf.SetXY(108, ySig+20)
-	pdf.CellFormat(94, 4.0, fullName, "", 1, "C", false, 0, "")
+	pdf.SetXY(12, ySig+17)
+	pdf.SetFont("Times", "BU", 8.5)
+	pdf.CellFormat(90, 3.5, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
+	pdf.SetXY(108, ySig+17)
+	pdf.CellFormat(90, 3.5, fullName, "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
 	err = pdf.Output(&buf)
