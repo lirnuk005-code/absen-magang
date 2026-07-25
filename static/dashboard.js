@@ -610,35 +610,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const exportContainer = document.createElement('div');
-    exportContainer.style.position = 'absolute';
-    exportContainer.style.left = '-9999px';
-    exportContainer.style.top = '-9999px';
-    exportContainer.style.width = '700px';
+    exportContainer.style.position = 'fixed';
+    exportContainer.style.top = '0';
+    exportContainer.style.left = '0';
+    exportContainer.style.width = '750px';
+    exportContainer.style.zIndex = '-99999';
+    exportContainer.style.visibility = 'visible';
     exportContainer.style.fontFamily = "'Times New Roman', Times, serif";
-    exportContainer.style.color = '#000';
-    exportContainer.style.background = '#fff';
+    exportContainer.style.color = '#000000';
+    exportContainer.style.background = '#ffffff';
     exportContainer.style.padding = '30px 40px';
+    exportContainer.style.boxSizing = 'border-box';
 
     exportContainer.innerHTML = `
-      <div style="text-align: center; line-height: 1.3; margin-bottom: 20px;">
+      <div style="text-align: center; line-height: 1.3; margin-bottom: 20px; color: #000;">
         <div style="font-size: 14pt; font-weight: bold;">DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)</div>
         <div style="font-size: 12pt; font-weight: bold;">UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR</div>
         <div style="font-size: 12pt; font-weight: bold;">PT ADYA ARTHA ABADI</div>
       </div>
 
-      <table style="width: 100%; font-size: 11pt; border: none; margin-bottom: 15px; border-collapse: collapse;">
-        <tr><td style="width: 160px; padding: 2px 0;">Nama Mahasiswa</td><td style="width: 15px;">:</td><td><b>${studentName}</b></td></tr>
-        <tr><td style="padding: 2px 0;">NIM</td><td>:</td><td>${studentNIM}</td></tr>
-        <tr><td style="padding: 2px 0;">Program Studi</td><td>:</td><td>Manajemen</td></tr>
-        <tr><td style="padding: 2px 0;">Tempat PKL</td><td>:</td><td>PT Adya Artha Abadi</td></tr>
-        <tr><td style="padding: 2px 0;">Periode PKL</td><td>:</td><td>15 s.d. 30 Juni 2026</td></tr>
+      <table style="width: 100%; font-size: 11pt; border: none; margin-bottom: 15px; border-collapse: collapse; color: #000;">
+        <tr><td style="width: 160px; padding: 3px 0;">Nama Mahasiswa</td><td style="width: 15px;">:</td><td><b>${studentName}</b></td></tr>
+        <tr><td style="padding: 3px 0;">NIM</td><td>:</td><td>${studentNIM}</td></tr>
+        <tr><td style="padding: 3px 0;">Program Studi</td><td>:</td><td>Manajemen</td></tr>
+        <tr><td style="padding: 3px 0;">Tempat PKL</td><td>:</td><td>PT Adya Artha Abadi</td></tr>
+        <tr><td style="padding: 3px 0;">Periode PKL</td><td>:</td><td>15 s.d. 30 Juni 2026</td></tr>
       </table>
 
-      <div style="font-size: 11pt; font-weight: bold; margin-bottom: 8px;">BULAN: JUNI 2026</div>
+      <div style="font-size: 11pt; font-weight: bold; margin-bottom: 8px; color: #000;">BULAN: JUNI 2026</div>
 
-      <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 25px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 25px; color: #000;">
         <thead>
-          <tr style="background-color: #f2f2f2;">
+          <tr style="background-color: #f2f2f2; color: #000;">
             <th style="border: 1px solid #000; padding: 6px; width: 40px; text-align: center;">No</th>
             <th style="border: 1px solid #000; padding: 6px; width: 110px; text-align: center;">Tanggal</th>
             <th style="border: 1px solid #000; padding: 6px; width: 100px; text-align: center;">Hari</th>
@@ -650,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </tbody>
       </table>
 
-      <table style="width: 100%; border: none; font-size: 11pt; margin-top: 25px;">
+      <table style="width: 100%; border: none; font-size: 11pt; margin-top: 25px; color: #000;">
         <tr>
           <td style="width: 50%; text-align: center; vertical-align: top;">
             Mengetahui,<br>
@@ -669,10 +672,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(exportContainer);
 
     const opt = {
-      margin:       [10, 15, 10, 15],
+      margin:       [10, 10, 10, 10],
       filename:     `Absensi_PKL_Juni2026_${currentUser.username}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
