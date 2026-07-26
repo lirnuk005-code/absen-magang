@@ -122,7 +122,7 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	pdf.SetFont("Times", "I", 7.8)
 	pdf.CellFormat(186, 3.0, "Alamat: Jalan Gatot Subroto I, Tonja, Denpasar Utara, Denpasar, Bali", "", 1, "C", false, 0, "")
 
-	// 3. Render Official Kop Double Line (At Y=21.2mm - CLEARLY BELOW BOTH LOGOS!)
+	// 3. Render Official Kop Double Line (At Y=21.2mm)
 	yLine := 21.2
 	pdf.SetLineWidth(0.7)
 	pdf.Line(12, yLine, 198, yLine)
@@ -179,31 +179,34 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 			pdf.SetFont("Times", "", 7.5)
 		}
 
-		pdf.CellFormat(colW[0], 2.80, item.No, "1", 0, "C", fill, 0, "")
-		pdf.CellFormat(colW[1], 2.80, item.Date, "1", 0, "C", fill, 0, "")
-		pdf.CellFormat(colW[2], 2.80, item.Day, "1", 0, "C", fill, 0, "")
-		pdf.CellFormat(colW[3], 2.80, statusStr, "1", 1, "C", fill, 0, "")
+		pdf.CellFormat(colW[0], 2.76, item.No, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[1], 2.76, item.Date, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[2], 2.76, item.Day, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[3], 2.76, statusStr, "1", 1, "C", fill, 0, "")
 	}
 
-	pdf.Ln(2.2)
+	pdf.Ln(2.0)
 
-	// 6. Signature Section
+	// 6. Signature Section (Both Left & Right display "Denpasar, [Tanggal Export]")
 	ySig := pdf.GetY()
-	pdf.SetFont("Times", "B", 8.5)
-	pdf.SetXY(12, ySig)
-	pdf.CellFormat(90, 3.5, "Kepala Cabang PT. Adya Artha Abadi Bali", "", 0, "C", false, 0, "")
-	pdf.SetXY(108, ySig)
 	pdf.SetFont("Times", "", 8.5)
-	pdf.CellFormat(90, 3.5, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
+	pdf.SetXY(12, ySig)
+	pdf.CellFormat(90, 3.2, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 0, "C", false, 0, "")
+	pdf.SetXY(108, ySig)
+	pdf.CellFormat(94, 3.2, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
 
-	pdf.SetXY(108, ySig+3.5)
-	pdf.CellFormat(94, 3.5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
+	pdf.SetFont("Times", "B", 8.5)
+	pdf.SetXY(12, ySig+3.2)
+	pdf.CellFormat(90, 3.2, "Kepala Cabang PT. Adya Artha Abadi Bali,", "", 0, "C", false, 0, "")
+	pdf.SetXY(108, ySig+3.2)
+	pdf.SetFont("Times", "", 8.5)
+	pdf.CellFormat(94, 3.2, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
 
 	pdf.SetXY(12, ySig+17)
 	pdf.SetFont("Times", "BU", 8.5)
-	pdf.CellFormat(90, 3.5, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
+	pdf.CellFormat(90, 3.2, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
 	pdf.SetXY(108, ySig+17)
-	pdf.CellFormat(94, 3.5, fullName, "", 1, "C", false, 0, "")
+	pdf.CellFormat(94, 3.2, fullName, "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
 	err = pdf.Output(&buf)
