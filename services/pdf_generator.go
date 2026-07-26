@@ -95,41 +95,43 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	}
 
 	pdf := fpdf.New("P", "mm", "A4", "")
-	pdf.SetMargins(12, 5, 12)
+	pdf.SetMargins(12, 6, 12)
 	pdf.SetAutoPageBreak(false, 0)
 	pdf.AddPage()
 
-	// Register & Render Logos (Undiknas & PT Adya Artha Abadi)
+	// 1. Register & Render Logos (Undiknas & PT Adya Artha Abadi)
 	undiknasBytes, err := static.Files.ReadFile("logo_undiknas.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_undiknas", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(undiknasBytes))
-		pdf.ImageOptions("logo_undiknas", 12, 5, 16, 16, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_undiknas", 12, 7, 18, 18, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
 	companyBytes, err := static.Files.ReadFile("logo_company.png")
 	if err == nil {
 		pdf.RegisterImageOptionsReader("logo_company", fpdf.ImageOptions{ImageType: "PNG"}, bytes.NewReader(companyBytes))
-		pdf.ImageOptions("logo_company", 178, 6, 20, 13, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+		pdf.ImageOptions("logo_company", 178, 8.5, 20, 14, false, fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
 	}
 
-	// Header Title
-	pdf.SetFont("Times", "B", 11)
-	pdf.CellFormat(186, 4.0, "DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)", "", 1, "C", false, 0, "")
-	pdf.SetFont("Times", "B", 9.5)
+	// 2. Header Title Text (Vertically and Horizontally Centered Kop)
+	pdf.SetY(7)
+	pdf.SetFont("Times", "B", 11.5)
+	pdf.CellFormat(186, 4.2, "DAFTAR HADIR PRAKTIK KERJA LAPANGAN (PKL)", "", 1, "C", false, 0, "")
+	pdf.SetFont("Times", "B", 10.0)
 	pdf.CellFormat(186, 3.8, "UNIVERSITAS PENDIDIKAN NASIONAL (UNDIKNAS) DENPASAR", "", 1, "C", false, 0, "")
 	pdf.CellFormat(186, 3.8, "PT ADYA ARTHA ABADI", "", 1, "C", false, 0, "")
-	pdf.Ln(3)
+	pdf.SetFont("Times", "I", 8.0)
+	pdf.CellFormat(186, 3.2, "Alamat: Jalan Gatot Subroto I, Tonja, Denpasar Utara, Denpasar, Bali", "", 1, "C", false, 0, "")
 
-	// Render Official Kop Double Line (=======)
-	yLine := pdf.GetY()
+	// 3. Render Official Kop Double Divider Line (=======)
+	yLine := pdf.GetY() + 1.2
 	pdf.SetLineWidth(0.8)
 	pdf.Line(12, yLine, 198, yLine)
 	pdf.SetLineWidth(0.25)
 	pdf.Line(12, yLine+0.8, 198, yLine+0.8)
-	pdf.SetLineWidth(0.2) // Reset line width
-	pdf.SetY(yLine + 2.5)
+	pdf.SetLineWidth(0.2) // Reset default line width
 
-	// Student Info Table (Compact 2-Column Row below Kop Line)
+	// 4. Student Info Metadata Box (Clean 2-Column Tabs)
+	pdf.SetY(yLine + 2.8)
 	pdf.SetFont("Times", "", 8.5)
 	pdf.CellFormat(28, 3.2, "Nama Mahasiswa", "", 0, "L", false, 0, "")
 	pdf.CellFormat(3, 3.2, ":", "", 0, "L", false, 0, "")
@@ -149,24 +151,22 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	pdf.CellFormat(3, 3.2, ":", "", 0, "L", false, 0, "")
 	pdf.CellFormat(67, 3.2, "15 Juni s.d. 31 Agustus 2026", "", 1, "L", false, 0, "")
 
-	pdf.Ln(2.5)
+	pdf.Ln(2.2)
 
-	// Balanced Column Widths (186 mm Total Width)
-	// No: 14mm | Tanggal: 40mm | Hari: 40mm | Status Presensi: 92mm
+	// 5. Balanced Column Widths Table (186 mm Total Width)
 	colW := []float64{14, 40, 40, 92}
 
 	pdf.SetFillColor(230, 235, 245) // Soft professional blue-grey header
 	pdf.SetFont("Times", "B", 8.5)
-	pdf.CellFormat(colW[0], 4.0, "No", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[1], 4.0, "Tanggal", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[2], 4.0, "Hari", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colW[3], 4.0, "Status Presensi", "1", 1, "C", true, 0, "")
+	pdf.CellFormat(colW[0], 3.8, "No", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[1], 3.8, "Tanggal", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[2], 3.8, "Hari", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colW[3], 3.8, "Status Presensi", "1", 1, "C", true, 0, "")
 
 	pdf.SetFont("Times", "", 7.5)
 	for i, item := range dateRange {
 		statusStr := getFullStatusStr(item, logMap, username)
 
-		// Subtle alternating row background color
 		fill := false
 		if i%2 == 1 {
 			pdf.SetFillColor(248, 249, 250)
@@ -179,15 +179,15 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 			pdf.SetFont("Times", "", 7.5)
 		}
 
-		pdf.CellFormat(colW[0], 2.82, item.No, "1", 0, "C", fill, 0, "")
-		pdf.CellFormat(colW[1], 2.82, item.Date, "1", 0, "C", fill, 0, "")
-		pdf.CellFormat(colW[2], 2.82, item.Day, "1", 0, "C", fill, 0, "")
-		pdf.CellFormat(colW[3], 2.82, statusStr, "1", 1, "C", fill, 0, "")
+		pdf.CellFormat(colW[0], 2.76, item.No, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[1], 2.76, item.Date, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[2], 2.76, item.Day, "1", 0, "C", fill, 0, "")
+		pdf.CellFormat(colW[3], 2.76, statusStr, "1", 1, "C", fill, 0, "")
 	}
 
-	pdf.Ln(2.5)
+	pdf.Ln(2.2)
 
-	// Signature Section
+	// 6. Signature Section
 	ySig := pdf.GetY()
 	pdf.SetFont("Times", "B", 8.5)
 	pdf.SetXY(12, ySig)
@@ -197,13 +197,13 @@ func GenerateAbsensiPDF(username string, logs []models.AttendanceLog) ([]byte, s
 	pdf.CellFormat(90, 3.5, fmt.Sprintf("Denpasar, %s", todayFormatted), "", 1, "C", false, 0, "")
 
 	pdf.SetXY(108, ySig+3.5)
-	pdf.CellFormat(90, 3.5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
+	pdf.CellFormat(94, 3.5, "Mahasiswa PKL,", "", 1, "C", false, 0, "")
 
 	pdf.SetXY(12, ySig+17)
 	pdf.SetFont("Times", "BU", 8.5)
 	pdf.CellFormat(90, 3.5, "I Made Mas Sugianyar", "", 0, "C", false, 0, "")
 	pdf.SetXY(108, ySig+17)
-	pdf.CellFormat(90, 3.5, fullName, "", 1, "C", false, 0, "")
+	pdf.CellFormat(94, 3.5, fullName, "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
 	err = pdf.Output(&buf)
