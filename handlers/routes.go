@@ -523,16 +523,64 @@ func (h *ServerHandler) LogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logs, err := h.Store.GetLogs(cookie.Value)
+	rawLogs, err := h.Store.GetLogs(cookie.Value)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(models.Response{Success: false, Message: "Gagal mengambil log presensi"})
 		return
 	}
 
+	// Map existing logs by DD-MM-YYYY
+	logMap := make(map[string]bool)
+	for _, l := range rawLogs {
+		dateStr := l.CheckInTime.In(time.FixedZone("WITA", 8*3600)).Format("02-01-2006")
+		logMap[dateStr] = true
+	}
+
+	// Auto-inject Sundays & Tanggal Merah from PKL Start Date (15 June 2026) up to Today
+	startDate := time.Date(2026, 6, 15, 0, 0, 0, 0, time.FixedZone("WITA", 8*3600))
+	now := time.Now().In(time.FixedZone("WITA", 8*3600))
+
+	fullLogs := append([]models.AttendanceLog{}, rawLogs...)
+
+	for curr := startDate; !curr.After(now); curr = curr.AddDate(0, 0, 1) {
+		dateStr := curr.Format("02-01-2006")
+		if logMap[dateStr] {
+			continue // Log already exists
+		}
+
+		isGalungan := (dateStr == "16-06-2026" || dateStr == "17-06-2026")
+		isKemerdekaan := (dateStr == "17-08-2026")
+		isSunday := (curr.Weekday() == time.Sunday)
+
+		if isGalungan || isKemerdekaan || isSunday {
+			holidayTitle := "Hari Minggu Libur"
+			status := "LIBUR_HARI_MINGGU"
+			if isGalungan {
+				holidayTitle = "Libur Hari Raya Galungan"
+				status = "LIBUR_GALUNGAN"
+			} else if isKemerdekaan {
+				holidayTitle = "Libur Hari Kemerdekaan RI"
+				status = "LIBUR_KEMERDEKAAN"
+			}
+
+			fullLogs = append(fullLogs, models.AttendanceLog{
+				Username:       cookie.Value,
+				CheckInTime:    time.Date(curr.Year(), curr.Month(), curr.Day(), 8, 0, 0, 0, time.FixedZone("WITA", 8*3600)),
+				Type:           "LIBUR",
+				Latitude:       services.TargetLat,
+				Longitude:      services.TargetLng,
+				DistanceMeters: 0,
+				IPAddress:      "SYSTEM_AUTO",
+				Status:         status,
+				Notes:          fmt.Sprintf("🌴 %s (Otomatis Terverifikasi Sistem)", holidayTitle),
+			})
+		}
+	}
+
 	json.NewEncoder(w).Encode(models.Response{
 		Success: true,
-		Data:    logs,
+		Data:    fullLogs,
 	})
 }
 
